@@ -1,0 +1,7 @@
+
+
+sub main
+    /declare test string local
+    /echo test is empty? ${test.Length}
+/return
+

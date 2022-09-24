@@ -1,0 +1,28 @@
+#warning
+
+#include Command.inc
+
+Sub Main
+	/call InitCommand
+	
+	/call RegisterCommandSub "MyCommand"
+	
+	:loop
+		/call DoCommands
+	/goto :loop
+/return
+
+Sub MyCommand(String args)
+	/echo mycommand args: ${args}
+	
+	/if (${NumArgs[${args}]} != 4) {
+		/echo numArgs was not 4: ${NumArgs[${args}]}
+	}
+	
+	/declare arg1 ${args.Arg[1]}
+	/declare arg2 ${args.Arg[2]}
+	/declare arg3 ${args.Arg[3]}
+	/declare arg4 ${args.Arg[4]}
+	
+	/echo ${arg1} ${arg2} ${arg3} ${arg4}
+/return

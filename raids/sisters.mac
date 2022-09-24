@@ -1,0 +1,349 @@
+#warning
+
+||----------------------------------------------------------
+||
+||  MACRO  : sisters.mac
+||
+||  AUTHOR : Dewey2461
+||
+||  USAGE  : /mac sisters <ChannelName>
+||
+||  WHAT DOES IT DO? For anyone who has had the pleasure of being part of the "hail" 
+||			team for the demiplane sisters event you know how much of a pain 
+||			it can be to find and relay messages. This macro will help relay what 
+||			your sister is doing and tell your sister what others have said their
+||			sisters are doing in channel.
+||
+||	WARNING : Use at your own risk.-- This responds in say / channel where others 
+||			may notice your responding very quickly. 
+||
+||  YOU SHOULD READ THIS 
+||
+||          Before starting this macro you should be in whatever channel you use
+||			to pass sister info to. 
+||
+||			When the macro starts it will attempt to join the channel you started 
+||			the macro with or the default "hail" channel. If it can not join the 
+||			channel the replys will default to your group.
+||
+||			After the macro is running and the event is up, if you hail a sister 
+||			the macro captures the response and will send a message like :
+||			"Althea = DEAD RAT" to the channel and it will monitor the channel 
+||			looking for others to inform on their sisters. When it has the answer 
+||			the macro targets the sister you hailed and says the phrase. 
+||
+||			If everything is working correctly all you need to do is find your sister
+||			and hail her the macro should take care of the rest. 
+||
+||
+||----------------------------------------------------------
+||
+||  TO DO:	Add timers so you don't respond quite so quickly
+||
+||  HISTORY: AUG 19 2007 -- version 0.4
+||			Tested with live event. modified phrases to avoid false triggers from 
+||			hail channel chat.
+||
+||  HISTORY: AUG 05 2007 -- version 0.3
+||			Added CRYING QUIETLY,POISONOUS SUBSTANCE,DIARY events
+||
+||  HISTORY: JUL 28 2007 -- version 0.2
+||			Should be completely working except for the 3 missing triggers.
+||			Added responses to channel or group
+||			Will now /say anwser to your sister after targeting.
+||
+||  HISTORY: JUL 27 2007 -- version 0.1
+||			Initial posting to www.macroquest2.com VIP section. 
+||
+|| 
+||----------------------------------------------------------
+
+
+||----------------------------------------------------------
+||------------   TRIGGERS 
+||----------------------------------------------------------
+
+#event GetChannel	 "Channels: #*#"
+#event Channel		 "#1# tells |${ChannelName}|:#*#, '#2# #3#'"
+#event Dotted		 "You are pricked by a poisoned pin."
+#event Reset		 "#1# prepares to head elsewhere."
+#event WhoAskedForA  "#1# says 'Did you find out?  What is Althea up to?'"
+#event WhoAskedForB  "#1# says 'Did you find out what Brenda is up to?'"
+#event WhoAskedForC  "#1# says 'What is Christine up to?'"
+#event Win           "#*# your fellow Sisters will be bound and banished.'"
+#event Loss          "#*# I knew these mortals would fail.#*#"
+
+||----------------------------------------------------------
+||------------   10 SISTER TRIGGERS  - Missing some.
+||----------------------------------------------------------
+
+
+|| CONSPIRING	 - testing complete
+|| DEAD RAT		 - testing complete
+|| WOODEN STAKE	 - testing complete
+|| SABOTAGING	 - testing complete
+|| SPYING		 - testing complete
+|| LETTER OPENER - testing complete
+|| SCOPING		 - testing complete
+|| CRYING QUIETLY		- testing complete
+|| POISONOUS SUBSTANCE	- testing complete
+|| DIARY				- testing complete
+
+#event SetText	 "#1# is #2# with several werewolves, whispering and motioning towards the rooms of the other Sisters."
+#event SetText	 "#1# glances around the room to ensure the other Sisters are nowhere in sight, then slips a #2# under the bed pillow."
+#event SetText   "#1# is carving a block of wood, using a whittling blade to fashion a sharp #2#."
+#event SetText   "#1# uses a small chisel to hammer a crack into another Sister's coffin, #2# it."
+#event SetText   "#1# is surreptitiously watching the other Sisters, #2# on them."
+#event SetText   "#1# is murmuring to herself while obsessively sharpening an ornate #2#."
+#event SetText   "#1# is wandering the back halls, #2# out the occupants in the various guest rooms."
+#event SetText   "#1# is sulking, burying her face in the bedsheets while #2#."
+#event SetText   "#1# gingerly dabs a #2# onto the rim of one of the other Sister's wine goblets."
+#event SetText   "#1# is flipping through the pages of a #2#, which is obviously not her own.  It must belong to one of the other Wailing Sisters."
+
+||----------------------------------------------------------
+||------------   MAIN --- START HERE
+||----------------------------------------------------------
+
+Sub Main
+    /declare ChannelName string outer hail
+	/declare Channel string outer
+	/declare ResetTimer timer outer
+	/declare AnswerTimer timer outer
+	/declare Althea string outer
+	/declare Brenda string outer
+	/declare Christine string outer
+	/declare AltheaAsk string outer
+	/declare BrendaAsk string outer
+	/declare ChristineAsk string outer
+	/declare MySister string outer
+
+	/declare tDebug int outer 0
+	/declare vDebug int outer 0
+	/declare sDebug int outer 0
+
+	/if (${Param0.NotEqual[NULL]}) /varset ChannelName ${Param0}
+
+	/join ${ChannelName}
+	/call Reset
+	/varset ResetTimer 1000m
+
+	/echo Starting Sisters Responder
+
+    :Mainloop
+
+		/if (${ResetTimer}==0)	/call Reset
+		/if (${AnswerTimer}==0)	/call AskForInfo
+		/doevents
+    /goto :Mainloop
+/return
+
+
+
+||----------------------------------------------------------
+||------------   WHO IS EACH SISTER ASKING FOR ?
+||----------------------------------------------------------
+
+sub Event_WhoAskedForA(string line,string Sister)
+	/if (${tDebug})		/echo [Sisters] ${Sister} asking for Althea
+	/varset ${Sister}Ask Althea
+	/call DumpVars
+	/call AnswerIfAble		
+/return
+
+sub Event_WhoAskedForB(string line,string Sister)
+	/if (${tDebug})		/echo [Sisters] ${Sister} asking for Brenda
+	/varset ${Sister}Ask Brenda
+	/call DumpVars
+	/call AnswerIfAble
+/return
+
+sub Event_WhoAskedForC(string line,string Sister)
+	/if (${tDebug})		/echo [Sisters] ${Sister} asking for Christine
+	/varset ${Sister}Ask Christine
+	/call DumpVars
+	/call AnswerIfAble
+/return
+
+
+||----------------------------------------------------------
+||------------   WHAT IS OUR SISTER DOING ? 
+||----------------------------------------------------------
+
+sub Event_SetText(string line,string Sister,string Text)
+	/echo [Sisters] ${Sister} = ${Text}
+	/if (!${sDebug}) 	/docommand ${Channel} ${Sister} = ${Text}
+	/varset MySister ${Sister}
+	/varset ${Sister} ${Text}
+	/call DumpVars
+	/call AnswerIfAble
+/return
+
+||----------------------------------------------------------
+||------------   FIGURE OUT WHAT IS BEING SAID IN CHANNEL 
+||----------------------------------------------------------
+
+sub Event_Channel(string line,string Who, string Said, string What)
+	/declare s string inner 
+	/declare t string inner 
+	/if (${tDebug})		/echo [Sisters-FromChannel] "${Said}" "${What}"
+	/varset s NONE
+	/varset t NONE
+
+	/if (${Said.Left[1].Equal[A]}) /varset s Althea
+	/if (${Said.Left[1].Equal[B]}) /varset s Brenda
+	/if (${Said.Left[1].Equal[C]}) /varset s Christine
+
+|    Hard part figure out which phrase 
+
+	/if (${What.Find[CONSPIRING]})	/varset t CONSPIRING
+	/if (${What.Find[CRYING QUI]})	/varset t CRYING QUIETLY
+	/if (${What.Find[DEAD RAT]})	/varset t DEAD RAT
+	/if (${What.Find[DIARY]})		/varset t DIARY
+	/if (${What.Find[LETTER OPEN]})	/varset t LETTER OPENER
+	/if (${What.Find[SUBSTAN]})		/varset t POISONOUS SUBSTANCE
+	/if (${What.Find[SONOUS]})		/varset t POISONOUS SUBSTANCE
+	/if (${What.Find[SABOTAG]})		/varset t SABOTAGING
+	/if (${What.Find[SCOPIN]})		/varset t SCOPING
+	/if (${What.Find[SPYING]})		/varset t SPYING
+	/if (${What.Find[WOODEN]})		/varset t WOODEN STAKE
+	/if (${What.Find[STAKE]})		/varset t WOODEN STAKE
+
+|	If we found both sister and phrase - save info 
+
+	/if (${s.NotEqual[NONE]} && ${t.NotEqual[NONE]}) {
+		/if (${tDebug})			/echo [Sisters-FromChannel] "${Said} ${What}"  ==>  ${s} = ${t}
+		/varset ${s} ${t}
+		/call DumpVars
+	}
+
+	/call AnswerIfAble
+
+/return
+
+
+||----------------------------------------------------------
+||------------   Answer if we have the info.
+||----------------------------------------------------------
+
+Sub AnswerIfAble
+	/declare ask string inner 
+	/declare answer string inner 
+	/if (${MySister.Equal[NONE]}) /return
+	/varset ask ${${MySister}Ask}
+	/if (${ask.Equal[NONE]}) /return
+	/varset answer ${${ask}}
+	/if (${answer.Equal[NONE]}) /return
+	/echo [Sisters] ANSWER = ${answer}
+
+|	If we are debugging don't need to target and a say,
+
+	/if (!${sDebug}) {
+		/target ${MySister}
+		/delay 1s
+		/say ${answer}
+	}
+	/varset MySister NONE
+/return
+
+
+||----------------------------------------------------------
+||------------   Ask For Info 
+||----------------------------------------------------------
+
+Sub AskForInfo
+	/varset AnswerTimer 2m
+	/call AnswerIfAble
+	/if (${MySister.Equal[NONE]}) /return
+	/if (${${MySister}Ask.Equal[NONE]}) /return
+
+	/echo [Sisters] Need ${${MySister}Ask}
+	/varset AnswerTimer 30s
+
+/return
+
+
+||----------------------------------------------------------
+||------------   Reset Stuff
+||----------------------------------------------------------
+
+sub Reset
+|	/echo [Sisters] Variables Reset
+	/varset ResetTimer   60m
+	/varset AnswerTimer  1m
+	/varset Althea		 NONE
+	/varset Brenda		 NONE
+	/varset Christine	 NONE
+	/varset AltheaAsk	 NONE
+	/varset BrendaAsk	 NONE
+	/varset ChristineAsk NONE
+	/varset MySister	 NONE
+
+/return
+
+
+||----------------------------------------------------------
+||------------   WIN / LOSE 
+||----------------------------------------------------------
+
+sub Event_Win
+	/echo Win!
+	/end
+/return
+
+sub Event_Lose
+	/end
+/return
+
+
+||----------------------------------------------------------
+||------------   Rather than reset for trigger , do it once using a timer
+||----------------------------------------------------------
+
+sub Event_Reset(string line, string Sister)
+	/varset ResetTimer 5s
+	/call Reset
+/return
+
+||----------------------------------------------------------
+||------------   DOTED!  Get a cure.
+||----------------------------------------------------------
+
+
+sub Event_Dotted
+|	/if (!${sDebug}) 	/g Dotted .. cure please.
+/return
+
+
+||----------------------------------------------------------
+||------------   DumpVars   (debugging)
+||----------------------------------------------------------
+
+sub DumpVars
+	/if (!${vDebug}) /return
+	/echo === VARIABLES ===
+	/echo Althea = ${Althea}
+	/echo Brenda = ${Brenda}
+	/echo Christine = ${Christine}
+	/echo AltheaAsk = ${AltheaAsk}
+	/echo BrendaAsk = ${BrendaAsk}
+	/echo ChristineAsk = ${ChristineAsk}
+	/echo MySister = ${MySister}
+/return 	
+
+||----------------------------------------------------------
+||------------   Get Channel -- From SymScripts MCS 
+||----------------------------------------------------------
+
+Sub Event_GetChannel(string line)
+    /declare c2 string
+    /declare a int
+
+    /if ( !${line.Mid[${Math.Calc[${line.Find[${ChannelName}]}-2]},1]} ) {
+        /echo Could not find channel defaulting to group
+		/varset Channel /g
+        /return
+    }
+
+    /varset Channel /${line.Mid[${Math.Calc[${line.Find[${ChannelName}]}-2]},1]}
+/return
+

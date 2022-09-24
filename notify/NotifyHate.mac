@@ -1,0 +1,31 @@
+#warning
+
+#include Notify.inc
+
+| Hate spawns on a ? day +/- 12 hour cycle
+
+sub main
+	/echo ---------Notify Hate----------
+
+	/declare mobCount int outer 5
+	
+	/call SetupNotifyVars
+	|/varset endOnTargetKill TRUE
+	/varset doText TRUE
+	
+	/call setupAnchor
+	/varset doAnchor FALSE
+	|/varset ignorePC TRUE
+	/varset ignorePcRange 1000
+	|/varset ignorePcByLOS TRUE
+	
+	/call setupLoot
+	/call OverrideManualLoot Keep
+	
+	|/call ArrayAdder "Maestro of Rancor" TRUE
+	/call ArrayAdder "Innoruuk" TRUE
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

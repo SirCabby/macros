@@ -1,0 +1,246 @@
+#warning
+
+| Performer event macro - Version 0.9 Beta by Oz
+| Usage - will hopefully respond to the requests to sing correctly
+| This is my first macro so please excuse my terrible coding :P
+
+#event start        "The performer says 'Wonderful! Pay attention to the cues#*#"
+#event mymistake    "You feel as if you have made a mistake#*#"
+#event othermistake "The Performer says 'Come on, #1#, stay with us#*#"
+#event failed       "The performer died#*#"
+#event rnd1         "Ol' Nilipus hailed from Misty Thicket#*#"
+#event rnd2         "Where'er he smelled Jumjum he'd pick it#*#"
+#event rnd3         "The halflings grew cross#*#"
+#event rnd4         "When their profits were lost,#*#"
+#event rnd5         "screamin','Where is that brownie? I'll kick it!'#*#"
+#event seth1        "Another night, in eternal darkness#*#"
+#event seth2        "Time bleeds like a wound that's lost all meaning#*#"
+#event seth3        "It's a long winter in the swirling chaotic void#*#"
+#event seth4        "This is my torture,#*#"
+#event seth5        "my pain and suffering!#*#"
+#event seth6        "Pinch me, O' Death. . .#*#"
+#event Aelf1        "Touched tenderly#*#"
+#event Aelf2        "Where will you be?#*#"
+#event Aelf3        "Dreaming with me#*#"
+#event Aelf4        "Please,#*#"
+#event Aelf5        "Everybody, hear the music#*#"
+#event Brit1        "When she and I split ways,#*#"
+#event Brit2        "It felt like the end of my days#*#"
+#event Brit3        "Until I suddenly,#*#"
+#event Brit4        "Suddenly realized#*#"
+#event Brit5        "This life was better off alone#*#"
+#event Brit6        "Solitude was the best gift you ever gave me#*#"
+
+Sub Main
+/declare  myfailures     int outer 0
+/declare  othersfailure  int outer 0
+
+/echo Performer Event Macro Started, waiting for event to start ...
+:loop
+  /doevents
+  /delay 1s
+  /goto :loop
+/return
+
+
+sub Event_start
+  /popup Event Triggered
+  /echo  Event Triggered @ ${Time}
+/return
+
+Sub Event_mymistake
+  /popup YOU failed your line!
+  /echo  YOU failed your line!
+  /varcalc myfailures ${myfailures}+1
+/return
+
+Sub Event_othermistake
+  /echo someone else failed their line!
+  /varcalc othersfailure ${othersfailure}+1   
+/return
+
+Sub Event_failed
+  /echo Total event failure! Stopping macro @ ${Time}
+  /echo I had ${myfailures} and the raid screwed up ${othersfailure} times
+  /endmacro
+/return
+
+Sub Event_rnd1
+  /call MoveToRandal
+  /call MoveToRandal
+  /say Where'er he smelled Jumjum he'd pick it.
+/return
+
+Sub Event_rnd2
+  /call MoveToRandal
+  /call MoveToRandal
+  /say The halflings grew cross
+/return
+
+Sub Event_rnd3
+  /call MoveToRandal
+  /call MoveToRandal
+  /say When their profits were lost,
+/return
+
+Sub Event_rnd4
+  /call MoveToRandal
+  /call MoveToRandal
+  /say screamin','Where is that brownie? I'll kick it!'
+/return
+
+Sub Event_rnd5
+  /call MoveToRandal
+  /call MoveToRandal
+  /say Ol' Nilipus hailed from Misty Thicket.
+/return
+
+Sub Event_seth1
+  /call MoveToSeth
+  /call MoveToSeth
+  /say Time bleeds like a wound that's lost all meaning.
+/return
+
+Sub Event_seth2
+  /call MoveToSeth
+  /call MoveToSeth
+   /say It's a long winter in the swirling chaotic void.
+/return
+
+Sub Event_seth3
+  /call MoveToSeth
+  /call MoveToSeth
+  /say This is my torture,
+/return
+
+Sub Event_seth4
+  /call MoveToSeth
+  /call MoveToSeth
+  /say my pain and suffering!
+/return
+
+Sub Event_seth5
+  /call MoveToSeth
+  /call MoveToSeth
+  /say Pinch me, O'Death. . .
+/return
+
+Sub Event_seth6
+  /call MoveToSeth
+  /call MoveToSeth
+  /say Another night, in eternal darkness.
+/return
+
+Sub Event_Aelf1
+  /call MoveToAelfric
+  /call MoveToAelfric
+  /say Where will you be?
+/return
+
+Sub Event_Aelf2
+  /call MoveToAelfric
+  /call MoveToAelfric
+  /say Dreaming with me.
+/return
+
+Sub Event_Aelf3
+  /call MoveToAelfric
+  /call MoveToAelfric
+  /say Please,
+/return
+
+Sub Event_Aelf4
+  /call MoveToAelfric
+  /call MoveToAelfric
+  /say everybody, hear the music.
+/return
+
+Sub Event_Aelf5
+  /call MoveToAelfric
+  /call MoveToAelfric
+  /say Touched tenderly.
+/return
+
+Sub Event_Brit1
+  /call MoveToBritton
+  /call MoveToBritton
+  /say it felt like the end of my days.
+/return
+
+Sub Event_Brit2
+  /call MoveToBritton
+  /call MoveToBritton
+  /say Until I suddenly,
+/return
+
+Sub Event_Brit3
+  /call MoveToBritton
+  /call MoveToBritton
+  /say Suddenly realized
+/return
+
+Sub Event_Brit4
+  /call MoveToBritton
+  /call MoveToBritton
+  /say this life was better off alone.
+/return
+
+Sub Event_Brit5
+  /call MoveToBritton
+  /call MoveToBritton
+  /say Solitude was the best gift you ever gave me.
+/return
+
+Sub Event_Brit6
+  /call MoveToBritton
+  /call MoveToBritton
+  /say When she and I split ways,
+/return
+
+Sub MoveToRandal
+  /popup Moving to Randal
+  /target Randal
+  /face nolook
+:RandalLoop
+  /if (${Target.Distance}> 20) {
+    /keypress forward hold 
+    /goto :RandalLoop
+  }
+  /keypress back   
+/return
+
+Sub MoveToAelfric
+  /popup Moving to Aelfric
+  /target Aelfric
+  /face nolook
+:AelfricLoop
+  /if (${Target.Distance}> 20) {
+    /keypress forward hold 
+    /goto :AelfricLoop
+  }
+  /keypress back   
+/return
+
+Sub MoveToSeth
+  /popup Moving to Seth
+  /target Seth
+  /face nolook
+:SethLoop
+  /if (${Target.Distance}> 20) {
+    /keypress forward hold 
+    /goto :SethLoop
+  }
+  /keypress back   
+/return
+
+Sub MoveToBritton
+  /popup Moving to Britton
+  /target Britton
+  /face nolook
+:BrittonLoop
+  /if (${Target.Distance}> 20) {
+    /keypress forward hold 
+    /goto :BrittonLoop
+  }
+  /keypress back   
+/return 

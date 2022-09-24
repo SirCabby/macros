@@ -1,0 +1,34 @@
+#warning
+
+#include Notify.inc
+
+| Fear spawns on a ? day +/- 12 hour cycle
+
+sub main
+	/echo ---------Notify Fear----------
+
+	/declare mobCount int outer 7
+	
+	/call SetupNotifyVars
+	|/varset endOnTargetKill TRUE
+	/varset doText TRUE
+	
+	/call setupAnchor
+	/varset doAnchor FALSE
+	|/varset ignorePC TRUE
+	/varset ignorePcRange 1000
+	|/varset ignorePcByLOS TRUE
+	
+	/call setupLoot
+	/call OverrideManualLoot Keep
+		
+	/call ArrayAdder "a dracoliche" TRUE
+	/call ArrayAdder "Dread" TRUE
+	/call ArrayAdder "Fright" TRUE
+	/call ArrayAdder "Terror" TRUE
+	/call ArrayAdder "The Shade of Cazic Thule" TRUE
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

@@ -1,0 +1,1449 @@
+#warning
+
+|---------------------------------------------------------------------------------------
+|
+| raid.mac / raid.inc
+|
+| Triggers and code for doing Queen Malarian
+| Triggers and code for doing Death Knell aka DK1-4
+| Triggers and code for doing Grobb MM 
+|
+|---------------------------------------------------------------------------------------
+
+
+|-- DoCure "Wave of Infestation" With CureC from group
+
+| Use this if running as a mac instead of include
+|Sub main
+|	/declare RaidPulseTimer timer outer
+|	/declare MobID int outer 0
+|   :loop
+|	/call RaidPulse
+|	/delay 1s
+|	/goto :loop
+|/return
+
+Sub RaidPulse
+	/varset RaidPulseTimer 1s
+	/if ( ${Me.PctHPs} == 0 ) /return
+	|/if ( ${Zone.ID}==469 )  /call QueenPulse
+	|/if ( ${Zone.ID}==52 )  /call GrobbPulse
+	|/if ( ${Zone.ID}==728 ) /call PupsOfWarPulse
+	|/if ( ${Zone.ID}==471 ) /call TowerPulse
+	|/if ( ${Zone.ID}==208 ) /call POValarPulse
+	|/if ( ${Zone.ID}==436 ) /call POValarPulse
+	|/if ( ${Zone.ID}==769 ) /call HOFPulse
+	|/if ( ${Zone.ID}==760 ) /call CHPulse
+	|/if ( ${Zone.ID}==753 ) /call XorbbPulse
+	|/if ( ${Zone.ID}==776 ) /call AHTick
+	|/if ( ${Zone.ID}==783 ) /call DINOTick
+	/if ( ${Zone.ID}==73 && ${Task.Title.Equal[Ancient Heroes - Lady Vox]} ) /call VOX
+	/if ( ${Zone.ID}==32 && ${Task.Title.Equal[Ancient Heroes - Lord Nagafen]} ) /call VOX
+	/if ( ${Zone.ID}==729 && ${Task.Title.Equal[Two Sides of the Stone]} ) /call TwoSidesOfTheStone
+/return
+
+Sub TwoSidesOfTheStone
+	/declare m_i int local 0
+	/declare Player1 string local Vacate
+	/declare Player2 string local Jagerr
+	
+	:TwoSidesOfTheStoneLoop
+		/if (${Cursor.Name.Equal[Book of Prayers]}) /autoinv
+		/if (${Cursor.Name.Equal[Book of Chants]}) /autoinv
+		/if (${Me.Name.Equal[${Player1}]} || ${Me.Name.Equal[${Player2}]}) {
+			/for m_i 1 to 30
+				/if (${Bool[${Me.XTarget[${m_i}].TargetType}]} && ${Me.XTarget[${m_i}].TargetType.Equal[Auto Hater]} && ${Me.XTarget[${m_i}].Name.Equal[Vision of Splendor ]}) {
+					/if (${Me.Name.Equal[${Player1}]} && !${Target.Name.Equal[${Player2}]}) {
+						/target ${Player2}
+						/delay 3s ${Target.Name.Equal[${Player2}]}
+					}
+					/if (${Me.Name.Equal[${Player2}]} && !${Target.Name.Equal[${Player1}]}) {
+						/target ${Player1}
+						/delay 3s ${Target.Name.Equal[${Player1}]}
+					}
+					/if (!${Me.Buff[Strained Voice]} && !${Me.Buff[Prayer of Purity]} && ${FindItem[=Book of Prayers].ID}) {
+						/casting "Book of Prayers"
+					}
+					/goto :TwoSidesOfTheStoneLoop
+				} else /if (${Bool[${Me.XTarget[${m_i}].TargetType}]} && ${Me.XTarget[${m_i}].TargetType.Equal[Auto Hater]} && ${Me.XTarget[${m_i}].Name.Equal[Shadow of Decay]}) {
+					/if (${Me.Name.Equal[${Player1}]} && !${Target.Name.Equal[${Player2}]}) {
+						/target ${Player2}
+						/delay 3s ${Target.Name.Equal[${Player2}]}
+					}
+					/if (${Me.Name.Equal[${Player2}]} && !${Target.Name.Equal[${Player1}]}) {
+						/target ${Player1}
+						/delay 3s ${Target.Name.Equal[${Player1}]}
+					}
+					/if (!${Me.Buff[Strained Voice]} && !${Me.Buff[Chant of Decay]} && ${FindItem[=Book of Chants].ID}) {
+						/casting "Book of Chants"
+					}
+					/goto :TwoSidesOfTheStoneLoop
+				} else {
+					/next m_i
+				}
+		}
+/return
+
+Sub VOX
+	/if (!${Me.Pet.ID} && ${Me.AltAbilityReady[Greater Conjuration: Earth]} && ${Me.PctMana}>12) {
+		/bc Making pet
+		/varset MobID 0
+		/alt act 2684
+		/delay 13s
+		/return
+	}
+	/if (!${Me.Pet.ID} && ${Me.AltAbilityReady[Cackling Bones]} && ${Me.PctMana}>12) {
+		/bc Making pet
+		/varset MobID 0
+		/alt act 2809
+		/delay 13s
+		/return
+	}
+
+
+	/if (${Me.Pet.ID} && ${Me.Pet.PctHPs} < 20 && ${Me.AltAbilityReady[Reclaim Energy]}) {
+		/bc Reclaiming pet
+		/alt act 2704
+		/return
+	}
+	/if (${Me.XTarget[1].ID} && !${MobID}) {
+		/varset MobID ${Me.XTarget[1].ID}
+		/target id ${MobID}
+		/delay 1
+		/pet attack
+		/bc pet is on [ ${Spawn[id ${MobID}].Name} ] 
+	}
+	/if (${MobID} && !${Spawn[id ${MobID}].ID}) /varset MobID 0
+	/if (${MobID} && ${Spawn[id ${MobID}].Type.NotEqual[NPC]}) /varset MobID 0
+	/if (!${Me.XTarget} && ${Me.Pet.ID} && !${Me.Pet.Secondary} && !${Cursor.ID} && 0) {
+		/if (${Me.AltAbilityReady[Dagger of Symbols]} && ${Me.PctMana}>10) {
+			/alt act 2675
+			/delay 12s
+			/target id ${Me.Pet.ID}
+			/delay 2
+			/click left target
+			/delay 5
+			/notify GiveWnd GVW_Give_Button LeftMouseUp
+			/delay 1
+			/autoinv
+			/delay 5
+		}
+	}
+		
+	/delay 2
+
+/return
+
+#event SOL6		"Your skin begins to blister as you are inflicted with Solar Strike."
+
+Sub Event_SOL6
+	|/g rgc
+/return
+
+
+#event TT1      "Petran Searake says 'I think I can see#*#"
+#event TT2		"You have been assigned the task 'Storm of Sorts'."
+
+Sub Event_TT1
+	/echo Got TT1
+	/if (${Group.Leader.Name.Equal[${Me.Name}]}) { 
+		/say fish
+		/delay 1s
+		/notify TaskSelectWnd AcceptButton leftmouseup
+		/delay 1s
+		/keypress ESC			
+		/keypress ESC					
+		/timed 600 /bc go setup
+		/timed 610 /bc go buff
+		/timed 620 /bc autoattack on
+		/timed 920 /mcs go pull
+		/grouproles set Riptides 1
+		/grouproles set Riptides 3
+		/grouproles set Rapitiss 2
+	}
+/return
+
+Sub Event_TT2
+	/mcs recast off
+	/timed 340 /target Petran
+	/timed 350 /mcs rsay ready
+/return
+
+		
+
+
+#event AH1      "Vasser Fayeil says 'This is a bittersweet moment#*#"
+#event AH2      "You have been assigned the task 'Rings of Fire'.
+#event AH3      "You have entered Argin-Hiz: Burn Out."
+#event AH1	    "[MQ2] mcs go ah"
+
+Sub Event_AH1	
+	/echo Got AH1
+	/if (${Group.Leader.Name.Equal[${Me.Name}]}) { 
+		/say find out
+		/if ( !${Defined[AHLogicState]} ) {
+			/declare AHLogicState int outer 0
+			/declare AHLogicTimer timer outer 0
+		}
+		/varset AHLogicState 1
+		/varset AHLogicTimer 15s
+	}		
+/return
+
+Sub Event_AH2
+	/echo Got AH2
+	/mcs stop
+	/mcs vis
+	/mcs recast off
+	/sit
+	/timed 340 /target Vasser
+	/timed 350 /mcs rsay head to the hall
+/return
+	
+Sub Event_AH3
+	/echo Got AH3
+	/sit
+/return
+
+Sub AHTick
+	/if ( !${Defined[AHLogicState]} ) /return 
+	/if ( !${AHLogicState} ) /return
+	/if ( ${AHLogicTimer} ) /return
+	/varset AHLogicTimer 10s
+	/if ( 0 && ${Me.XTarget} && !${Me.Combat} ) {
+		/echo AH - autoattack 
+		/target id MobID
+		/attack on
+		/return
+	}
+
+	/if ( ${AHLogicState}==1 && ${Math.Distance[1778,367]}<100) {
+		/if ( ${SpawnCount[PC]} <= ${Group}) /return
+
+		|-- Starting things up 
+		/echo -- AH Logic State 1 - Setup 
+		/varset AHLogicState 2
+		/bc go setup
+		/bc autoattack on
+		/bc domez off
+		/bc gshrink
+		/bc go buff
+		/varset AHLogicTimer 60s
+		/return
+	}
+	/if ( ${AHLogicState}==2 ) {
+		/varset AHLogicState 3
+		/mcs go pull
+	}
+	/if ( ${AHLogicState}==3 ) {
+
+	}
+
+	/return
+}
+
+
+
+#event QN1      "#*#Queen Malarian anchors her feet to the ground and prepares to unleash a wave of burning acid.#*#"
+#event QN2      "#*#You see the queen glare at you, aiming her sickening ball of fluids at you.#*#"
+#event QN3      "#*#Queen Malarian begins to exude diseased fluids and takes careful aim at #1#!#*#"
+#event QN4      "#*#You are infested by hundreds of slithering maggots.#*#"
+
+#event POW1     "#*#You have been assigned the task 'Pups of War'.#*#"
+#event COB1		"#*#You have been assigned the task 'The Traitor Revealed'.#*#"
+#event TORHA    "#*#You have been assigned the task 'Brendaleen's Scheme'.#*#"
+#event TORHA1   "You say, 'Hail, Brendaleen Thundershield'"
+#event MAXAA	"You have reached the AA point cap, and cannot gain any#*#"
+
+#event TW1A		"The maw in the northeast gurgles and coughs up a drop of ooze."
+#event TW1B		"The maw in the northwest gurgles and coughs up a drop of ooze."
+#event TW1C		"The maw in the southeast gurgles and coughs up a drop of ooze."
+#event TW1D		"The maw in the southwest gurgles and coughs up a drop of ooze."
+
+|#event TaskAssigned "#*#You have been assigned the task '#1#'.
+
+
+#event TOV1		"Aaryonar turns a dreadful gaze upon you#*#"
+
+#event CR1		"Khozul steps into the shadows#*#"
+#event CR1	    "As the tension builds, a frightened slave prepares to fight or flee."
+#event CR1		"The crowd boos. They think the fight is going too fast!"
+#event CR2		"The crowd in the southwest section boos. They want the action brought closer!"
+#event CR3		"The crowd in the southeast section boos. They want the action brought closer!"
+#event CR4		"The crowd in the northwest section boos. They want the action brought closer!"
+#event CR5		"The crowd in the northeast section boos. They want the action brought closer!" 
+#event CR6		"Kilsev begins to focus his rage."
+#event CR7 	    "#*#Kilsev's rage subsides."
+#event CR8		"Vyzh`dra draws power from the crowd's energy."
+#event CR9      "Vyzh`dra commands his tigers to attack!"
+
+#event BG1		"#1# has been encased in a crystal egg shell.#*#"
+#event BG2		"The ground beneath your feet begins to heat as Zalikor flies away."
+
+
+
+Sub Event_BG1(string line, string Name)
+	/target pc ${Name}
+	/delay 2
+	/if (${Me.Class.ShortName.Equal[MNK]}) /attack on
+	/if (${Me.Class.ShortName.Equal[RNG]}) /attack on
+	/if (${Me.Class.ShortName.Equal[BRD]}) /attack on
+	/if (${Me.Class.ShortName.Equal[SHD]}) /attack on
+/return
+
+Sub Event_BG2
+	/echo -- BG2 -- MOVE IT !
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC	
+	/play BG2
+/return
+
+Sub Event_TOV1
+	/attack off
+	/stick off
+	/play TOV1
+	/g I'm running away now.
+/return
+
+Sub Event_CR1
+	/echo --- CR1 EVENT -- TURNING ATTACK OFF --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC		
+/return
+
+Sub Event_CR2
+	/echo --- CR2 EVENT -- MOVE SW --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC	
+	|/call MoveToLoc 315.66 116.15
+	|/call MoveToLoc 330.30 101.40
+	/play sw
+/return
+
+Sub Event_CR3
+	/echo --- CR3 EVENT -- MOVE SE --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC	
+	|/call MoveToLoc 324.80 -136.97 271.43 
+	|/call MoveToLoc 333.60 -115.71 271.42
+	/play se
+/return
+
+Sub Event_CR4
+	/echo --- CR4 EVENT -- MOVE NW --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC	
+	|/call MoveToLoc 466.38 87.03 271.51 
+	|/call MoveToLoc 450.94 63.33 271.50 
+	/play nw
+/return
+
+Sub Event_CR5
+	/echo --- CR5 EVENT -- MOVE NE --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC	
+	|/call MoveToLoc 481.89 -80.65 271.44 
+	|/call MoveToLoc 457.81 -64.99 271.44
+	/play ne
+/return
+
+Sub Event_CR6
+	/echo --- CR6 EVENT -- KITE IF YOUR MAIN TANK --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC
+	/if (${Group.MainTank.Name.Equal[${Me.Name}]}) {
+		/play kite
+		/keypress FORWARD hold
+		/keypress FORWARD hold
+		/keypress FORWARD hold
+		/timed 210 /echo Kilsev's rage subsides.
+	} else {
+		|/call MoveToLoc 481.89 -80.65 271.44 
+		/play ne
+		/timed 170 /echo Kilsev's rage subsides.		
+	}
+	
+/return
+
+Sub Event_CR7 
+	/echo -- CR7 -- Rageover move back to center
+	/play off
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC
+	|/call MoveToLoc 385.99 5.51 271.45 
+	/play center
+/return
+
+|| 	    "draws power from crowd"
+Sub Event_CR8 
+	/call ProcessRequest "${GroupMA}" "combat off"
+	/keypress ESC	
+	|/call MoveToLoc 315.66 116.15		|| NE 
+	/play NE
+	/timed 150 /echo Kilsev's rage subsides.	
+/return
+
+Sub Event_CR9
+	/echo --- CR8 EVENT -- MOVE BACK IN MELEE RANGE --
+	/call ProcessRequest "${GroupMA}" "combat off"
+	|/call MoveToLoc 385.99 5.51 271.45 
+	/play center
+	/target npc Vyzh`dra
+/return
+
+
+Sub Event_TaskAssigned(string line, string Quest)
+	/call Event_TaskUpdate "${line}" "${Quest}"
+/return
+
+
+
+Sub TowerPulse
+	/if ( ${Me.Name.Equal[xWindance]} && ${Spawn[The Mindblight].ID} && !${Me.AFK} && ${Target.ID}!=${Spawn[The Mindblight].ID} ) {
+		/varset RaidPulseTimer 3s		
+		/play off
+		/stick off
+		/call ProcessRequest "${Me}" "combat off"		
+		/echo TowerPulse /target id ${Spawn[The mindblight].ID} 
+		/target id ${Spawn[The Mindblight].ID}
+		/delay 1
+		/cast 1
+		/cast 2
+	}
+	/if ( ${Me.Name.Equal[xZelnik]} && ${Spawn[The Mindblight].ID} && !${Me.AFK} && ${Target.ID}!=${Spawn[The Mindblight].ID} ) {
+		/varset RaidPulseTimer 3s			
+		/play off
+		/stick off
+		/call ProcessRequest "${Me}" "combat off"		
+		/echo TowerPulse /target id ${Spawn[The mindblight].ID} 
+		/target id ${Spawn[The Mindblight].ID}
+		/delay 1
+		/cast 1
+		/cast 2
+		/cast 4
+		/cast 5
+		/cast 6
+		/autofire on
+
+	}
+
+	/if ( ${Me.Name.Equal[Starshadows]} && ${Spawn[mindgnawer].ID} && !${Me.AFK} && ${Target.ID}!=${Spawn[mindgnawer].ID} ) {
+		/echo -- STARSHADOWS ${Time} : MEZ MINDGNAWER 
+		/varset DoMez 0
+		/target id ${Spawn[mindgnawer].ID}
+		/delay 1
+		/twist 1
+		/delay 3s
+		/echo -- STARSHADOWS ${Time} DONE : Next ... 
+	}
+	
+	/if (${Me.Name.Equal[xRapitiss]} && ${Spawn[npc ooze radius 10].ID} && !${Target.ID}) {
+		/target ooze
+		/delay 1
+		/bc go kill
+	}
+	
+/return
+
+Sub Event_TowerLogic
+	/if ( !${Defined[TowerLogicState]} ) {
+		/declare TowerLogicState int outer 0
+		/declare TowerLogicTimer timer outer 0
+	}
+	/declare n int 0
+	/declare c int 0
+	/delay 1s
+	/delay 20s ${Me.Moving}
+	
+	/if ( ${Me.Name.Equal[xWindance]}) {
+		/if (${Me.XTarget[3].ID}) /target id ${Me.XTarget[3].ID}
+		/if (!${Me.XTarget[3].ID} && ${Me.XTarget[2].ID}) /target id ${Me.XTarget[2].ID}
+		/if (!${Me.XTarget[2].ID} && ${Me.XTarget[1].ID}) /target id ${Me.XTarget[1].ID}
+		/echo -- WINDANCE : ${Time} -- TARGET ${Target} cast dot! 
+		/cast 1 
+		/cast 2
+		/cast 3
+	}
+	/if ( ${Me.Name.Equal[xZelnik]}) {
+		/if (${Me.XTarget[3].ID}) /target id ${Me.XTarget[3].ID}
+		/if (!${Me.XTarget[3].ID} && ${Me.XTarget[2].ID}) /target id ${Me.XTarget[2].ID}
+		/if (!${Me.XTarget[2].ID} && ${Me.XTarget[1].ID}) /target id ${Me.XTarget[1].ID}
+		/echo -- ZELNIK : ${Time} -- TARGET ${Target} cast dot! 
+		/cast 1 
+		/cast 2
+		/cast 4
+		/cast 5
+		/autofire on
+	}
+	
+/return
+
+
+
+Sub Event_TW1A
+	/call ProcessRequest "${Me}" "combat off"
+	|/moveto loc 90 60
+	/call Event_TowerLogic
+/return
+
+
+Sub Event_TW1B
+	/call ProcessRequest "${Me}" "combat off"
+	|/moveto loc 90 -60
+	/call Event_TowerLogic
+/return
+
+
+Sub Event_TW1D
+	/call ProcessRequest "${Me}" "combat off"
+	|/moveto loc 206 -60
+	/call Event_TowerLogic
+/return
+
+Sub Event_TW1C
+	/call ProcessRequest "${Me}" "combat off"
+	|/moveto loc 206 60
+	/call Event_TowerLogic
+/return
+
+Sub Event_MAXAA
+	/echo MCS: MaxAA Event
+	/casting "Glyph of destruction"
+	/mcs buyaa Glyph of destruction
+/return
+
+Sub Event_POW1
+	/declare wait int
+	/delay 18s
+	/varcalc wait ${Me.CurrentHPs} % 183
+	/delay ${wait}
+	/target Portencia
+	/delay 5
+	/say ready
+/return
+
+Sub Event_COB1
+	/keypress ESC
+	/keypress ESC
+	/keypress ESC	
+	/declare wait int
+	/delay 18s
+	/varcalc wait ${Me.CurrentHPs} % 183
+	/delay ${wait}
+	/target Xalvir
+	/delay 5
+	/say going
+/return
+
+
+Sub Event_TORHA1
+	/say yes
+/return
+
+Sub Event_TORHA
+	/echo WAITING FOR INSTANCE.
+	/keypress ESC
+	/keypress ESC
+	/keypress ESC	
+	/declare wait int
+	/delay 30s
+	/varcalc wait ${Me.CurrentHPs} % 283
+	/delay ${wait}
+	/target Brendaleen
+	/delay 2
+	/say Ready 
+/return
+
+
+
+Sub Event_QN1
+|	/call ProcessRequest "${GroupMA}" "go Queen1"
+/return
+
+Sub Event_QN2
+	/stick off
+	/play run smart
+	/timed 120 /play run smart reverse
+|	/call ProcessRequest "${GroupMA}" "go Queen2"
+/return
+
+Sub Event_QN3
+|	/call ProcessRequest "${GroupMA}" "go Queen3"
+/return
+
+|-- hit with plague. need to make sure I get cured.
+Sub Event_QN4
+	/rs Have PLAGUE cure me!
+	/play run smart reverse
+|	/call ProcessRequest "${GroupMA}" "go Queen4"
+/return
+|-- Loc1 456 -68    11 oclock ( healer 1 )
+|-- Loc2 411   0     9 oclock ( healer 2 )
+|-- Loc3 347 -18     7 oclock ( healer 3 )
+|-- Loc4 388 -92     3 oclock ( tank / melee )
+
+|-- /echo ${Spawn[plague spirit].Distance}
+Sub QueenPulse
+	/declare RunList string CLR|DRU|ENC|MAG|NEC|SHM|WIZ
+	/if ( ${Spawn[plague spirit].Distance} < 30 ) {
+		/if ( ${RunList.Find[${Me.Class.ShortName}]} ) {
+			/play ${Math.Rand[3]} smart
+		}
+	}
+/return
+
+
+#event Pull1 "[MQ2] Pull1"
+
+/return
+
+
+|#event XorbbStart "You have been assigned the task 'The Return of King Xorbb'."
+|#event XorbbLoot  "#*#LootNow#*#"
+|#event XorbbLens  "#*#King Xorbb chooses a lens from which to fire.#*#"
+|#event XorbbCharm "King Xorbb shouts '#1#'"
+
+Sub Event_XorbbStart()
+	/echo -- START XORBB --
+	/delay 36s
+	/declare wait int local 0
+	/varcalc wait ${Me.CurrentHPs} % 183
+	/delay ${wait}
+	/target Thistlebrush
+	/delay 5
+	/say Enter
+/return
+
+
+Sub Event_XorbbLoot()
+	/echo -- EVENT -- XorbbLoot
+	/declare Loot int local 0
+	/if (${Me.Name.Equal[Stoen]}) /return
+	/if 
+	/if (${Me.Name.Equal[Rapitiss]}) 	/target weakminded
+	/if (${Me.Name.Equal[Starshadows]}) /target flamenerve
+	/if (${Me.Name.Equal[Zelnik]})		/target hobblefooted
+	/if (${Me.Name.Equal[Windance]} || (${Me.Name.Equal[Riptides]}) {
+		/sit
+		/return
+	}
+	/ooc Looting Now!
+	/twist off
+	/target corpse
+	/stick 10
+	/call LootCorpse
+	/if (${Me.Name.Equal[Rapitiss]}) /return
+	/target Rapitiss
+	/stick 10
+/return
+
+Sub Event_XorbbLens()
+	/echo -- EVENT -- XorbbLens
+	/keypress ESC
+	/delay 3s
+	/casting "Barrier Shard Crystal"|item
+	/delay 20s
+	/play X1
+	/delay 10s ${AdvPath.Playing}
+/return
+
+Sub Event_XorbbCharm(string line, string Name)
+	/if (${Me.Name.Equal[${Name}]}) {
+		/ooc About to get charmed ! 
+		/varset XorbbID -1
+		/if (${Target.Type.Equal[NPC]}) /varset XorbbID ${Target.ID}
+
+		/keypress ESC
+		/call set_anchor
+		/declare Facing float local ${Spawn[King Xorbb}.HeadingTo.DegreesCCW}
+		/varcalc Facing ${Facing}+180
+		/face fast heading ${Facing}
+		/keypress forward hold
+		/delay 6
+		/keypress forward
+		/varset XorbbCharm 7s
+		/varset PassiveCombat 0
+	}
+/return
+
+Sub XorbbPulse
+	/if (!${Spawn[npc Lupex].ID}) /return
+	/echo -- Xorbb pulse --
+	/if (!${Defined[XorbbCharm]}) {
+		/declare XorbbCharm timer outer 0
+		/declare XorbbID int outer 0
+	}
+	/if (${XorbbID} && ${XorbbCharm}==0) {
+		/if (${XorbID}!=-1) {
+			/target id ${XorbbID}
+			/call go_anchor
+			/varset MobID ${XorbbID}
+			/call ProcessRequest "${GroupMA}" "go kill"
+		}
+		/varset XorbbID 0
+		/varset PassiveCombat 1
+	}
+/return
+
+
+Sub CHPulse
+	/if (!${Spawn[npc Marnek Jaull].ID}) /return
+	/if (${Me.Name.Equal[Stoen]}) /return
+	/if (${Me.Name.Equal[Windance]}) /return
+	/if (${Me.Name.Equal[Rapitiss]}) /return
+	/declare HP int local ${Spawn[npc Marnek Jaull].PctHPs}
+	/if (${HP}==100) /return
+	/echo -- CH PULSE --
+	/declare ID int local 0 
+	| Tank - Skelly | Marnek [ 100-70, 40 - 20 ] if no wrath
+	| DPS - Skelly | Marknek [ 100-70, 40 - 20 ] if no wrath 
+	/if (79>=${HP} && ${HP}<=70 &&  ${Target.Name.Equal[#Marnek_Jaul00]}) /attack off
+	/if (50>=${HP} && ${HP}<=40 &&  ${Target.Name.Equal[#Marnek_Jaul00]}) /attack off
+	
+	/varset ID ${Spawn[npc skeleton].ID}
+	/echo /if (!${ID} && (100>${HP} && ${HP}<80) && !${Spawn[npc Wraith].ID}) /varset ID ${Spawn[npc Marnek].ID}
+	/if (!${ID} && (70>${HP} && ${HP}<50) && !${Spawn[npc Wraith].ID}) /varset ID ${Spawn[npc Marnek].ID}	
+	/if (!${ID} && (40>${HP} && ${HP}<20) && !${Spawn[npc Wraith].ID}) /varset ID ${Spawn[npc Marnek].ID}
+	/echo HP = ${HP} ID = ${ID} 
+	/if (!${ID}) {
+		/return
+	}
+	/keypress ESC
+	/attack off
+	/stick off
+	/varset MobID ${ID}
+	/target id ${ID}
+	/delay 2
+	/call ProcessRequest "${GroupMA}" "go kill"
+	
+
+/return
+
+Sub HOF_KillAdd
+	/declare ID int local 0 
+	/if ( ${MobID} ) /return
+	/varset ID ${NearestSpawn[npc bonepile fearspawn].ID}
+	/if ( !${ID} ) /varset ID ${NearestSpawn[npc fearbred hatchling].ID}
+|	/if ( !${ID} ) /varset ID ${NearestSpawn[npc fearbrute].ID}
+	/if ( !${ID} ) /varset ID ${NearestSpawn[npc bonepile fearspawn].ID}
+	/if ( !${ID} ) /varset ID ${NearestSpawn[npc nascent fearling].ID}
+	/if ( !${ID} ) /varset ID ${NearestSpawn[npc protogen fear].ID}
+	/if ( ${ID} == ${NetBots[Riptides].TargetID} ) /varset ID 0
+	/if ( !${ID} ) /varset ID ${NearestSpawn[npc anguish].ID}
+|	/if ( !${ID} ) /varset ID ${NearestSpawn[npc Fright].ID}
+|	/if ( !${ID} ) /varset ID ${NearestSpawn[npc Anxiety].ID}
+|	/if ( !${ID} ) /varset ID ${NearestSpawn[npc Misery].ID}	
+|	/if ( !${ID} ) /varset ID ${NearestSpawn[npc Madness].ID}	
+|	/if ( !${ID} ) /varset ID ${NearestSpawn[npc Terror].ID}		
+	/if ( !${ID} ) {
+		/if ( ${Spawn[npc Xaric].PctHPs} < 60 ) /return
+		/if ( ${Me.XTarget[1].Name.Equal[Xaric]} ) /varset ID 1
+		/if ( ${Me.XTarget[2].Name.Equal[Xaric]} ) /varset ID 1
+		/if ( ${Me.XTarget[3].Name.Equal[Xaric]} ) /varset ID 1
+		/if ( !${ID} ) /return
+		/target Xaric
+		/stick 15
+		/attack on
+		/return
+	}
+	/echo HOF_KillAdd ${ID}
+	/keypress ESC
+	/attack off
+	/stick off
+	/varset MobID ${ID}
+	/target id ${ID}
+	/delay 2
+	/call ProcessRequest "${GroupMA}" "go kill"
+/return
+
+
+Sub HOFPulse
+	/if ( !${Me.XTarget} ) /return
+	/if ( ${Me.Name.Equal[Rapitiss]} ) /call HOF_KillAdd
+	/if ( ${Me.Name.Equal[Starshadows]} ) /call HOF_KillAdd
+	/if ( ${Me.Name.Equal[Zelnik]} ) /call HOF_KillAdd
+/return
+
+
+Sub POValarPulse
+	/if ( ${Me.XTarget} && ${MobID} ) /return	
+	/if ( !${Defined[POWState]} ) /declare POWState int outer 0
+	/if ( !${POWState} ) /return
+	/if ( !${Defined[POWTimer]} ) /declare POWTimer timer outer 0
+	/if ( ${POWTimer} ) /return
+	/if ( !${Defined[POWPC1]} ) /declare POWPC1 int outer 0
+	/if ( !${Defined[POWPC2]} ) /declare POWPC2 int outer 0
+	/if ( !${Defined[POWPC3]} ) /declare POWPC3 int outer 0
+	/if ( !${Defined[POWPC4]} ) /declare POWPC4 int outer 0
+	/if ( !${Defined[POWK1Max]} ) /declare POWK1Max int outer 99
+	/if ( !${Defined[POWK2Max]} ) /declare POWK2Max int outer 99
+	/if ( !${Defined[POWK3Max]} ) /declare POWK3Max int outer 99
+	/if ( !${Defined[POWK4Max]} ) /declare POWK4Max int outer 99
+	/if ( !${Defined[POWKXSit]} ) /declare POWKXSit int outer 99
+
+	/if ( ${POWState}==1 ) {
+		|-- Starting things up 
+		/bc hotkeybank 6
+		/echo -- Setting up alerts --
+		/squelch /alert clear 0
+		/squelch /alert clear 1
+		/squelch /alert clear 2
+		/squelch /alert clear 3
+		/squelch /alert clear 4
+		/varset POWState 11
+		/declare a int inner 0
+		/declare x string inner NULL
+		/for a 1 to ${NetBots.Counts}
+			/varset x ${NetBots.Client.Arg[${a}," "]}
+			/squelch /alert add 0 pc ${x}
+		/next a
+		/for a 1 to 4
+			/alertPath ${a} K${a}Alert 150
+			/varset POWPC${a} ${SpawnCount[pc alert ${a}]}
+		/next a
+		/band activate pl
+		/play SETMax
+		/return
+	}
+	/if ( ${POWState}==11 ) {
+		/declare KxPath string inner NULL
+		/echo Checking for spawns. 
+		/declare a int inner 0		
+		/for a 1 to 4
+			/if ( ${SpawnCount[pc alert ${a}]}==${POWPC${a}} && ${SpawnCount[npc alert ${a}]}>${POWK${a}Max}) {
+				/varset KxPath K${a}
+				/varset POWState 20
+				/keypress 9
+				/mcs clickoff spike
+				/mcs clickoff spurs
+				/mcs clickoff spine
+				/varset POWTimer 4s	
+				/play K${a} nosmart eval 
+				/play pause 4000
+				/return
+			}
+		/next a
+		/varset POWTimer 12s
+		}
+	}
+	
+	/if ( ${POWState}==30 ) {
+		/declare a int inner 0
+		/declare ID int inner 0
+		/for a 1 to ${Me.XTarget}
+			/if (${Spawn[id ${Me.XTarget[${a}].ID}].Distance}>35) {
+				/return
+			}
+		/next a
+		/mcs clickoff fatigue
+		/bc hotkey 5
+		/varset POWState 39
+		/return
+	}
+	/if ( ${POWState}==39 ) {
+		/declare a int inner 0
+		/declare ID int inner 0
+		/for a 1 to ${Me.XTarget}
+			/if (${Spawn[id ${Me.XTarget[${a}].ID}].Distance}>50) {
+				/varset POWState 40
+				/return
+			}
+		/next a
+		/if (${Me.XTarget}<4) {
+			/varset POWState 40
+			/return
+		}
+		/if (${SpawnCount[npc radius 40]}<${POWKXSit} && ${Me.PctHPs}>70 && (${Me.Standing} || ${Me.Ducking})) {
+			/sit
+			/varset RaidPulseTimer 1
+		}
+		/if (!${Me.XTarget}) /varset POWState 11
+	}
+	/if ( ${POWState}==40 ) {
+		/echo -- KILL ALL ---
+		/if (${Me.XTarget}) {
+			/band activate dps
+			/target id ${Me.XTarget[1].ID}
+			/delay 1
+			/stand
+			/stick on
+			/attack on
+			/varset POWTimer 6s
+			/bc arch1
+			
+		} else {
+			/varset POWState 11
+		}
+	}
+
+	
+/return
+
+Sub CheckBMTaskList
+	/if ( !${Defined[BMTaskStep]} )  /declare BMTaskStep int outer -1
+	/if ( !${Defined[BMTaskList1]} ) /declare BMTaskList1 string outer Speak with Mea Treg.
+	/if ( !${Defined[BMTaskList2]} ) /declare BMTaskList2 string outer Speak with Trag.
+	/if ( !${Defined[BMTaskList3]} ) /declare BMTaskList3 string outer Follow Trag to where the domain hunters are keeping the naeya pups.
+	/if ( !${Defined[BMTaskList4]} ) /declare BMTaskList4 string outer Defeat the domain hunters in your way.
+	/declare T1 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[1]}
+	/declare T2 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[2]}
+	/declare T3 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[3]}
+	/declare T4 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[4]}
+	/declare T5 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[5]}
+	/declare T6 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[6]}
+	/declare T7 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[7]}
+	/declare T8 string local ${Window[TaskWnd].Child[TASK_TaskElementList].List[8]}
+	/varset  BMTaskStep -1
+	/if ( ${T1.Equal[${BMTaskList1}]} && ${T2.Equal[? ? ?]} ) /varset BMTaskStep 1
+	/if ( ${T2.Equal[${BMTaskList2}]} && ${T3.Equal[? ? ?]} ) /varset BMTaskStep 2
+	/if ( ${T3.Equal[${BMTaskList3}]} && ${T4.Equal[? ? ?]} ) /varset BMTaskStep 3
+	/if ( ${T4.Equal[${BMTaskList4}]} && ${T5.Equal[? ? ?]} ) /varset BMTaskStep 4
+	/echo BMTaskStep = ${BMTaskStep}
+
+/return
+
+
+Sub GetTaskInfo
+	/declare i int
+	/declare TaskListName string local NULL
+	/declare TaskListRole string local NULL
+	/if ( !${Defined[TaskLeader]} ) /declare TaskLeader string outer NULL
+	/if ( !${Defined[TaskName]} ) /declare TaskName string outer NULL
+	/if ( !${Defined[TaskTime]} ) /declare TaskTime string outer NULL
+	/for i 1 to 6 
+		/varset TaskListName ${Window[TaskWnd].Child[STASK_MemberList].List[${i},1]}
+		/varset TaskListRole ${Window[TaskWnd].Child[STASK_MemberList].List[${i},2]}
+		/if (${TaskListRole.Equal[Leader]} ) /varset  TaskLeader ${TaskListName}
+	/next i 
+	/varset TaskName ${Window[TaskWnd].Child[TASK_TaskList].List[1,2]}
+	/varset TaskTime ${Window[TaskWnd].Child[TASK_TaskList].List[1,3]}
+/return
+
+
+
+
+
+
+Sub PupsOfWarPulse
+	/if ( ${Me.XTarget} && ${MobID} ) /return	
+	/if ( !${Defined[POWTick]} ) /declare POWTick int outer 0
+	/if ( !${Defined[POWTimer]} ) /declare POWTimer timer outer 0
+	/if ( !${Defined[POWState]} ) /declare POWState int outer 0
+	/if ( ${POWTimer} ) /return
+	/call GetTaskInfo
+	/if ( ${TaskName.NotEqual[Pups of War]} ) /return
+	/if ( ${Me.Name.NotEqual[${TaskLeader}]} ) /return
+
+	/if ( ${Me.XTarget} && !${MobID} && !${POWTimer} ) /varset POWTimer 10s
+		/if ( ${Me.XTarget} && !${MobID} && ${POWTimer} < 30 ) {
+		/echo -- ADD -- target and kill
+		/target id ${Me.XTarget[1].ID}
+		/bc -> go kill
+		/return
+	}
+	/if ( ${Me.XTarget} ) /return
+
+	
+	|-- First start the NPC 
+	/if ( ${POWState}==99 && ${Math.Distance[307,2755]}<10) { 
+		/if ( ${SpawnCount[PC]} <= ${Group}) /return
+		/target mea treg
+		/delay 1s
+		/keypress hail
+		/delay 1s 
+		/target trag
+		/delay 1s
+		/echo Trag id = ${Target.ID}
+		/keypress hail
+		/delay 1s
+		/say depart
+		/delay 1s
+		/target trag
+		/delay 1s
+		/echo Trag id now = ${Target.ID}		
+		|-- NPC should be heading to hunters now. Get buffed and wait to start
+		/bc go buff
+		/bc go setup
+		/varset POWTimer 30s
+		/varset POWState 1
+		/return
+	}
+	
+	|-- Alternate start w/o NPC lockin
+	/if ( ${POWState}==0 && ${Math.Distance[307,2755]}<10) { 
+		/if ( ${SpawnCount[PC]} <= ${Group}) /return
+		/bc go buff
+		/bc go setup
+		/varset POWTimer 30s
+		/varset POWState 1
+		/return
+	}
+	
+	/if ( ${POWState}==1 && ${Spawn[npc radius 1 loc 2759 389].ID} ) {
+		/mcs go pups
+		/play off
+		/play pupa nosmart
+		/varset POWState 2
+	}
+	
+	/if ( ${POWState}==2 && !${AdvPath.Playing} && ${Spawn[npc radius 1 loc 2858 257].ID} ) {
+		/bca //moveto loc 295 2642
+		/varset PullCmdMove /play unpause
+		/varset POWState 3
+		/return
+	}
+	
+	/if ( ${POWState}==3 && !${AdvPath.Playing} && ${Spawn[npc radius 1 loc 2858 257].ID} ) {
+		/bca //moveto loc 295 2642
+		/play pup1 nosmart
+		/varset POWState 4
+		/return
+	}
+
+	/if ( ${POWState}==4 && !${AdvPath.Playing} && ${Spawn[npc radius 1 loc 2858 303].ID} ) {
+		/bca //moveto loc 295 2642
+		/play pup2 nosmart
+		/varset POWState 5
+		/return
+	}
+
+	/if ( ${POWState}==5 && !${AdvPath.Playing} && ${Spawn[npc radius 1 loc 2859 357].ID} ) {
+		/bca //moveto loc 295 2642
+		/play pup3 nosmart
+		/varset POWState 6
+		/return
+	}
+
+	/if ( ${POWState}==6 && !${AdvPath.Playing} && ${Spawn[npc radius 1 loc 2865 127].ID} ) {
+		/bca //moveto loc 295 2642	
+		/play pup4 nosmart
+		/varset POWState 7
+		/return
+	}
+	
+	/if ( ${POWState}==7 && !${AdvPath.Playing} ) {
+		/bc sit
+		/mcs lootall now
+		/varset POWState 8
+		/varset POWTimer 40s
+		/return
+	}
+		
+	/if ( ${POWState}==8 && !${AdvPath.Playing} ) {
+		/mcs go pups
+		/play off
+		/play pupb nosmart
+		/varset POWState 9
+		/return
+	}
+	
+	
+	|-- Start killing stuff ...
+	/if ( ${POWState} == 99 ) {
+		/if ( ${SpawnCount[PC]} <= ${Group}) /return	
+		/if ( ${POWState}==2 && ${Math.Distance[307,2755]}<100 && ${Spawn[npc radius 1 loc 2582 186].ID} ) {
+			|/target id ${Spawn[npc radius 1 loc 2582 186].ID}
+			|/delay 1s
+			|/cast 1
+			|/delay 1s
+			|/bc go kill
+			/mcs go pups
+		}
+		/varset POWTimer 60s	
+		/return
+	}
+
+/return
+
+
+
+Sub GrobbPulse
+	/if ( ${MyName.NotEqual[pc1]} ) /return
+	/if ( !${Defined[GrobbTick]} ) /declare GrobbTick int outer 0
+	/if ( !${Defined[GrobbTimer]} ) /declare GrobbTimer timer outer 0
+	/if ( !${Defined[GrobbState]} ) /declare GrobbState int outer 0
+	|/echo GrobbPulse - Me.XTarget = ${Me.XTarget}  MobID = ${MobID}
+
+	/if ( ${Me.XTarget} && ${MobID} ) /return
+	
+	/if ( ${Me.XTarget} && !${MobID} && !${GrobbTimer} ) /varset GrobbTimer 60
+	/if ( ${Me.XTarget} && !${MobID} && ${GrobbTimer} < 30 ) {
+		/echo -- ADD -- target and kill
+		/target id ${Me.XTarget[1].ID}
+		/g go kill
+		/return
+	}
+	/if ( ${Me.XTarget} ) /return
+	
+	/if ( ${Me.Spawn.State.Equal[STAND]} && ${GrobbTick} > 5 && !${MobID}) {
+		/varset GrobbState 0
+		/if ( !${GrobbState} && ${Spawn[Razbaz].Type.Equal[NPC]} ) /call PullMobHere A2B
+		/if ( !${GrobbState} && ${Spawn[Zabaak].Type.Equal[NPC]} ) /call PullMobHere A2C
+		/if ( !${GrobbState} && ${Spawn[Sutok].Type.Equal[NPC]} ) /call PullMobHere A2C
+		/if ( !${GrobbState} && ${Math.Distance[-70,0]}<150 && ${Spawn[npc Hukulk].Type.Equal[NPC]} ) {
+			/bc combat off
+			/g follow
+			/call MoveGroup A2C
+			/call MoveGroup C2D
+			/target prisoner
+			/delay 12s
+			/hail
+			/target clear
+			/g stop
+			| -- New loc is 177, -65 ( "D" )
+		}
+		/if ( !${GrobbState} && ${Spawn[Kankuk].Type.Equal[NPC]} ) /call PullMobHere D2E
+		/if ( !${GrobbState} && ${Spawn[Ootok].Type.Equal[NPC]} ) /call PullMobHere E2F
+		/if ( !${GrobbState} && ${Spawn[Rakguk].Type.Equal[NPC]} ) /call PullMobHere E2F
+		/if ( !${GrobbState} && ${Math.Distance[177,-65]}<100) {
+			/bc combat off
+			/g follow
+			/call MoveGroup E2F
+			/target prisoner
+			/delay 12s
+			/hail
+			/target clear
+			/g stop
+			| -- New loc is 334, -73 ( "F" )
+		}
+	
+		/if ( !${GrobbState} && ${Spawn[Ranjor].Type.Equal[NPC]} ) /call PullMobHere F2G
+		/if ( !${GrobbState} && ${Spawn[Ganbaku].Type.Equal[NPC]} ) /call PullMobHere H2I
+		/if ( !${GrobbState} && ${Spawn[Gralok].Type.Equal[NPC]} ) /call PullMobHere G2H
+		/if ( !${GrobbState} && ${Spawn[Brenga].Type.Equal[NPC]} ) /call PullMobHere G2H
+		
+		/if ( !${GrobbState} && ${Math.Distance[334,-73]}<100 && ${Spawn[npc Hukulk].Type.Equal[NPC]}) {
+			/bc combat off
+			/g follow
+			/call MoveGroup I2J
+			/delay 12s
+			/g stop
+			/if ( !${Me.XTarget} ) /g sit
+			| -- New loc is 559, -217 ( "J" )
+			/high Scintok
+		}
+		/if ( !${GrobbState} && ${Spawn[Scintok].Type.Equal[NPC]} ) /return  |- he will agro here
+		/if ( !${GrobbState} && ${Math.Distance[559,-217]}<100 && ${Spawn[npc Hukulk].Type.Equal[NPC]}) {
+			/bc combat off
+			/g follow
+			/call MoveGroup J2K
+			/delay 6s
+			/g stop
+			/if ( !${Me.XTarget} ) /g sit
+			| -- New loc is 456, -344 ( "K" )
+			/high Kigak
+		}
+		/if ( !${GrobbState} && ${Spawn[Kigak].Type.Equal[NPC]} ) /return  |- he will agro here
+		/if ( !${GrobbState} && ${Spawn[Cagrek].Type.Equal[NPC]} ) /call PullMobHere K2L
+		/if ( !${GrobbState} && ${Spawn[Bugak].Type.Equal[NPC]} ) /call PullMobHere L2M
+		/if ( !${GrobbState} && ${Math.Distance[456,-344]}<100 && ${Spawn[npc Hukulk].Type.Equal[NPC]}) {
+			/call MoveGroup L2M
+			/target prisoner
+			/delay 2s
+			/hail
+			/target clear
+			/call MoveGroup "L2M reverse"
+			/delay 2s
+			/g follow
+			/call MoveGroup M2N
+			/call MoveGroup N2O
+			/delay 6s
+			/g stop
+			/if ( !${Me.XTarget} ) /g sit
+			| -- New loc is 674, -489 ( "O" )
+			/high Thintan
+		}
+		/if ( !${GrobbState} && ${Spawn[Thintan].Type.Equal[NPC]} ) /return
+		/if ( !${GrobbState} && ${Math.Distance[674,-478]}<75 && ${Spawn[npc Hukulk].Type.Equal[NPC]}) {
+			/g follow
+			/call MoveGroup O2P
+			/delay 3s
+			/g stop
+			| -- New loc is 660, -636 ( "P" )
+		}
+		/if ( !${GrobbState} && ${Spawn[Wisthak].Type.Equal[NPC]} ) /return 
+		/if ( !${GrobbState} && ${Spawn[npc Hukulk].Type.Equal[NPC]} ) /call PullMobHere P2Q
+		/if ( !${GrobbState} && ${Math.Distance[660,-636]}<100) {
+			/g follow
+			/call MoveGroup R2S
+			/delay 6s
+			/g stop
+			/call MoveGroup S2T
+			/delay 6s
+			/g follow
+			/call MoveGroup T2U
+			/delay 6s 
+			/g stop
+			/target spoils
+			/delay 1s
+			/open
+			/delay 1s
+			/call MakeThemLoot
+		}
+	}
+	
+	/varcalc GrobbTick ${GrobbTick} + 1
+/return
+
+Sub MoveGroup(string path)
+	/play ${path} smart
+		:GrobMove
+		/keypress forward hold
+	/if (${AdvPath.Playing}) /goto :GrobMove
+    /keypress forward
+    /keypress back
+
+	/varset GrobbState 1
+/return
+	
+
+Sub PullMobHere(string path)
+	|- Camp is clear lets pull A2B
+	/declare LocX int
+	/declare LocY int
+	/declare i int
+	/echo Pull1[ ${MacroQuest.Running} ] : Start path
+	/target clear
+	/play ${path} smart
+	/target clear
+		:GrobPull
+		/keypress forward hold
+	/if (${AdvPath.Playing}) /goto :GrobPull
+    /keypress forward
+    /keypress back
+	
+	/echo Pull1[ ${MacroQuest.Running} ] : At pull spot
+	/play off
+
+	/delay 20s ${Me.XTarget}
+	
+	/if ( ${Me.XTarget} ) /target id ${Me.XTarget[1].ID}
+
+	/echo Pull1[ ${MacroQuest.Running} ] : Have Target Me.XTarget = ${Me.XTarget}
+	/echo Pull1[ ${MacroQuest.Running} ] : Start run back
+	:GrobParkRun
+	/play ${path} smart reverse
+		:GrobPark
+		/keypress forward hold
+	/if (${AdvPath.Playing}) /goto :GrobPark
+	/play off
+    /keypress forward
+    /keypress back
+	/varset LocX ${Me.X}
+	/varset LocY ${Me.Y}
+	
+|	/if ( ${Me.XTarget} ) {
+|		/target id ${Me.XTarget[1].ID}
+|		/delay 1m ${Target.Distance} < 35
+|		/if (${Math.Distance[${LocY},${LocX}]}>30) /goto :GrobParkRun
+|		/echo Pull1[ ${MacroQuest.Running} ] : target should be in range - /g go kill it
+|		/g go kill
+|	}
+
+	:GrobAllBadGuys
+
+	/for i 1 to 5
+	/if ( ${Me.XTarget[${i}].ID} ) {
+		/if (${Spawn[id ${Me.XTarget[${i}].ID}].Distance} > 30) {
+			/delay 3
+			/goto :GrobAllBadGuys
+		}
+	}
+	/if (${Math.Distance[${LocY},${LocX}]}>30) /goto :GrobParkRun
+	/if (${Me.XTarget}) /g go kill
+
+	/echo Pull1[ ${MacroQuest.Running} ] : PullMobHere - done.
+	/varset GrobbState 1
+/return
+
+		
+
+
+
+#event MakeThemLoot "[MQ2] makethemloot"
+
+Sub Event_MakeThemLoot
+	/call MakeThemLoot
+/return
+
+
+Sub MakeThemLoot
+	/target spoils
+	/delay 1s
+	/bc assist
+
+	/declare G1 int
+	/declare S1 string
+	/for G1 1 to 5
+
+		/varset S1 ${Group.Member[${G1}].Name}
+
+		/if (${S1.Length}) {
+			/bct ${S1} lootitem shard
+			/delay 12s
+			}
+		}
+	/next G1
+	/delay 12s
+	/echo mcs lootitem shard
+	/delay 6s
+/return 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sub XGrobbPulse
+	/if ( ${MyName.NotEqual[pc1]} ) /return
+	/if ( !${Defined[GrobbTick]} ) /declare GrobbTick int outer 0
+	/echo GrobbPulse - PullNow = ${PullNow} PullState = ${PullState} PullAbortTimer = ${PullAbortTimer}
+	/if ( ${Me.XTarget} ) /call CleanTarget
+
+	/if ( ${PullNow} ) {
+		/varset GrobbTick 0
+		/return
+	} else {
+		/varcalc GrobbTick ${GrobbTick} + 1
+	}
+
+	/if ( ${Me.Spawn.State.Equal[STAND]} && ${GrobbTick} > 5 ) {
+		/if ( !${PullNow} && ${Spawn[Razbaz].Type.Equal[NPC]} ) /call PullMobHere Razbaz A2B
+		/if ( !${PullNow} && ${Spawn[Zabaak].Type.Equal[NPC]} ) /call PullMobHere Basher A2C
+		/if ( !${PullNow} && ${Spawn[Sutok].Type.Equal[NPC]} ) /call PullMobHere Basher A2C
+
+		|/if ( !${PullNow} && ${Spawn[Kankuk].Type.Equal[NPC]} ) /call PullMobHere Zabaak A2C
+		}
+/return
+
+Sub XPullMobHere(string name, string path)
+	/call PullParse "ABORT 2m"
+	/call PullParse "MOVECMD    /play ${path} smart normal"
+	/call PullParse "HOMECMD    /play ${path} smart reverse"
+	/call PullParse "KILLCMD    /g go kill"
+	/call PullParse "NPC ${name} zradius 50 range 50"
+	/call PullParse "now"
+	
+/return
+
+Sub CleanTarget
+	/if ( !${MobID} && ${Me.XTarget}) {
+		/target id ${Me.XTarget[1].ID}
+		/call PullDoCMD "${PullCmdKill}"
+	}
+/return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#event DK2Start "#*#Amidst the din of ringing bells, you hear the #*#"
+#event DK2      "#*#You vision blurs#*#"
+#event DK2      "XXYou feel disoriented#*#"
+
+
+Sub Event_DK2
+	/declare ME_Z int
+	/declare ME_ZS string
+
+	/g DK2 ported 
+	/stick off
+	/attack off
+	/play off
+
+	/varset ME_Z 4
+	/if ( ${Me.Z} > -350 ) /varset ME_Z 3
+	/if ( ${Me.Z} > -250 ) /varset ME_Z 2
+	/if ( ${Me.Z} > -150 ) /varset ME_Z 1
+
+	/if ( (${ME_Z} == ${DK_Z}) && (${ME_Z}!=2)) /varset ME_Z 0
+
+	/if ( ${ME_Z} > ${DK_Z} ) /varset ME_Z 4
+
+	/varset ME_ZS ${ME_Z}
+	/if ( (${ME_Z}==2) && (${Me.Y}>=0) ) /varset ME_ZS 2A
+	/if ( (${ME_Z}==2) && (${Me.Y}<=0) ) /varset ME_ZS 2B
+
+	/play L${ME_ZS}_L${DK_Z} smart
+
+	/delay 20s !${AdvPath.Playing}
+
+
+/return
+
+Sub Event_DK2Start
+	/if (!${Defined[DK_Z]}) /declare DK_Z int outer
+
+	/varset DK_Z 4
+	/if ( ${Me.Z} > -350 ) /varset DK_Z 3
+	/if ( ${Me.Z} > -250 ) /varset DK_Z 2
+	/if ( ${Me.Z} > -150 ) /varset DK_Z 1
+
+	/echo DK_Z = ${DK_Z}
+/return
+
+
+#Event Trap           "#*#You sense a trap in this direction." 
+#Event Trap           "#*#You are certain that #*# is trapped." 
+
+Sub Event_Trap
+	/echo EVENT TRAP 
+	/declare a int
+    /for a 1 to 5
+		/if ( ${Target.ID}==0 || ${Target.Type.NotEqual[Object]} ) {
+			/keypress CYCLENPCTARGETS
+			/delay 5
+		}
+		/if ( ${Target.Type.Equal[Object]} ) {
+			/if ( ${Target.Distance}>50 ) {
+				/stick 50
+				/delay 2s
+			}
+			/if ( ${Me.AbilityReady[Disarm Traps]}) /doability "Disarm Traps"
+			/return
+		}
+    /next a
+/return
+
+
+
+
+|| Bell   -500 
+|| Orc    -450
+|| Undead -350
+|| Trap   -250
+|| Bats   -150
+||
+|| L0_L1   move from top to bats from  if ( abs(Z - (-145)) < 10 and Y < 0 ) /smart L0 to L1
+|| 
+|| [Sat Aug 08 22:17:14 2009] Ayonae shouts, 'Tarry not, mortals.  As I speak, Mayong's forces replenish themselves by calling on reserves from the Demi-Plane of Blood.  You all must descend through the trapdoor and eliminate them before they overtake my tower again.  Be on the guard for anything, even your own ineptitude.  Newcomers often lose their balance in the dizzying spiral of Vertigo.'
+|| [Sat Aug 08 22:22:18 2009] Amidst the din of ringing bells, you hear the unmistakable shriek of bats originating from the southern chamber.  Perhaps you should investigate it further.

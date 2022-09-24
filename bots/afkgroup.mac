@@ -1,0 +1,57 @@
+#warning
+
+sub main
+	/declare yloc int outer ${Me.Y}
+	/declare xloc int outer ${Me.X}
+	/declare moveBack bool outer FALSE
+	/declare distanceToEngage int outer 50
+	
+	/echo ---------AFK Group----------
+	/echo Anchor at ${yloc} ${xloc}
+	
+	/call ResetHaters
+
+	:killLoop
+		/if (${Me.Feigning}) {
+			/if (${Me.PctHPs} > 50) {
+				/target clear
+				/stand
+			}
+		} else {
+			/if (${Me.XTarget} > 0) {
+				/if (!${Me.Combat}) {
+					/if (${Me.XTarget[2].ID} && ${Me.XTarget[2].Type.Equal[NPC]} && !${Me.XTarget[2].Dead} && ${Spawn[id ${Me.XTarget[2].ID}].Distance} < ${distanceToEngage}) {
+						/target id ${Me.XTarget[2].ID}
+						/delay 1s ${Target.ID} == ${Me.XTarget[2].ID}
+						/echo Targeted ${Target.Name}
+						/attack on
+						/delay 2s ${Me.Combat}
+						/varset moveBack TRUE
+					}
+				}
+			} else {
+				/if (${moveBack} && !${Stick.Active}) {
+					/delay 1s
+					/moveto loc ${yloc} ${xloc}
+					/varset moveBack FALSE
+					|/hidecorpses all
+					/delay 2s
+					/face loc 0,${xloc}
+				} else {
+					/delay 1s
+				}
+			}
+		}
+	/goto :killLoop
+/return
+
+Sub ResetHaters
+	/if (${Me.XTarget[1].TargetType.NotEqual[Target's Target]}) /xtarget set 1 targetstarget
+	/if (${Raid.Members} > 0) {
+		/if (${Me.XTarget[2].TargetType.NotEqual[Raid Assist 1 Target]}) /xtarget set 2 raidassist1target
+	} else /if (${Group.GroupSize} > 1) {
+		/if (${Me.XTarget[2].TargetType.NotEqual[Group Assist Target]}) /xtarget set 2 groupassisttarget
+	} else {
+		/if (${Me.XTarget[2].TargetType.NotEqual[Auto Hater]}) /xtarget set 2 autohater
+	}
+/return

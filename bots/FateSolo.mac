@@ -1,0 +1,168 @@
+#warning
+
+#include SoloEngine.inc
+
+#define ZoneInstance "Thuliasaur Island"
+#define ZoneStatic "Thuliasaur Island"
+#define QuestGiver "Praetoria Okkirus"
+#define TaskName "A Fateful Arrival"
+#define RequestPhrase "see"
+#define EnterPhrase "ready"
+
+Sub main
+	/echo Fate Solo
+	
+	/call SetupSoloVars
+	/call SetupHudVars
+	
+	| Set Path Arrays
+	/call SetArrays
+	
+	/call OverrideManualLoot Keep
+	
+	:InstanceLoop
+		| Static logic
+		/call GetInstance "QuestGiver" "RequestPhrase" "EnterPhrase" "ZoneInstance" "TaskName"
+		
+		| Instance logic
+		/call RunNavs
+		
+		| Exit logic
+		/call RemoveInstance "ZoneStatic"
+	/goto :InstanceLoop
+/return
+
+Sub SetArrays
+	|1 - must supply kill range on starting nav point
+	/call ArrayAdder -475 -135 0
+	|2
+	/call ArrayAdder -619 48
+	|3
+	/call ArrayAdder -268 10
+	|4
+	/call ArrayAdder -124 71
+	|5 - Cross river to Turtles
+	/call ArrayAdder 153 157 200
+	|6
+	/call ArrayAdder 308 -47
+	|7
+	/call ArrayAdder 372 33
+	|8
+	/call ArrayAdder 414 276
+	|9 - Cross river to Raptors
+	/call ArrayAdder 286 502
+	|10
+	/call ArrayAdder -31 527
+	|11
+	/call ArrayAdder 218 675
+	|12
+	/call ArrayAdder 489 729
+	|13
+	/call ArrayAdder 530 1140
+	|14
+	/call ArrayAdder 502 1270
+	|15
+	/call ArrayAdder 606 1497
+	|16
+	/call ArrayAdder 664 1535
+	|17 - Cross river to Rex's
+	/call ArrayAdder 746 1677
+	|18
+	/call ArrayAdder 801 1767
+	|19
+	/call ArrayAdder 654 1796
+	|20
+	/call ArrayAdder 801 1767
+	|21
+	/call ArrayAdder 900 1792
+	|22 - Cross river from Rex's
+	/call ArrayAdder 825 1526
+	|23
+	/call ArrayAdder 696 1034
+	|24
+	/call ArrayAdder 743 295
+	|25 - Entering north tunnel to Thael Ew
+	/call ArrayAdder 1014 250
+	|26
+	/call ArrayAdder 1283 112
+	|27
+	/call ArrayAdder 1757 66
+	|28
+	/call ArrayAdder 1823 358
+	|29
+	/call ArrayAdder 1698 667
+	|30
+	/call ArrayAdder 1739 928
+	|31 - Sneak past the room with 4
+	/call ArrayAdder 2238 911 100
+	|32
+	/call ArrayAdder 2216 598 200
+	|33
+	/call ArrayAdder 2334 400
+	|34
+	/call ArrayAdder 1836 395
+	|35
+	/call ArrayAdder 1828 -193
+	|36
+	/call ArrayAdder 2305 -224
+	|37
+	/call ArrayAdder 2122 -537
+	|38
+	/call ArrayAdder 1861 -515
+	|39
+	/call ArrayAdder 1702 -389
+	|40
+	/call ArrayAdder 1630 -181
+	|41
+	/call ArrayAdder 1842 52
+	|42 - Leaving temple area
+	/call ArrayAdder 1195 132
+	|43
+	/call ArrayAdder 892 257
+	|44
+	/call ArrayAdder 756 68
+	|45
+	/call ArrayAdder 668 -393
+/return
+	|46 - Entering Aviaks
+	/call ArrayAdder 940 -834
+	|47
+	/call ArrayAdder 1153 -1346
+	|48
+	/call ArrayAdder 1354 -1370
+	|49
+	/call ArrayAdder 1373 -1736
+	|50
+	/call ArrayAdder 1354 -1370
+	|51
+	/call ArrayAdder 1153 -1346
+	|52
+	/call ArrayAdder 940 -834
+	|53 - Leaving Aviaks
+	/call ArrayAdder 724 -479
+	|54
+	/call ArrayAdder 270 -451
+	|55 - Entering Giants
+	/call ArrayAdder 10 -688
+	|56
+	/call ArrayAdder 196 -841
+	|57
+	/call ArrayAdder 79 -1089
+	|58
+	/call ArrayAdder 212 -1229
+	|59
+	/call ArrayAdder 174 -1536
+	|60
+	/call ArrayAdder -55 -1493
+	|61
+	/call ArrayAdder -112 -1380
+	|62
+	/call ArrayAdder -257 -1274
+	|63
+	/call ArrayAdder -367 -1489
+	|64
+	/call ArrayAdder -434 -1176
+	|65
+	/call ArrayAdder -177 -724
+		
+/return

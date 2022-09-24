@@ -1,0 +1,22 @@
+#warning
+
+sub main
+	/if (${Me.XTarget[1].TargetType.NotEqual[Target's Target]}) /xtarget set 1 targetstarget
+	/if (${Raid.Members} > 0) {
+		/if (${Me.XTarget[2].TargetType.NotEqual[Raid Assist 1 Target]}) /xtarget set 2 raidassist1target
+	} else /if (${Group.GroupSize} > 1) {
+		/if (${Me.XTarget[2].TargetType.NotEqual[Group Assist Target]}) /xtarget set 2 groupassisttarget
+	} else {
+		/if (${Me.XTarget[2].TargetType.NotEqual[Auto Hater]}) /xtarget set 2 autohater
+	}
+	
+	/if (${Me.XTarget[2].ID}) /target id ${Me.XTarget[2].ID}
+	/delay 1s ${Target.Type.Equal[NPC]}
+	/if (${Target.Type.Equal[NPC]}) {
+		/stick loose 10
+		/delay 3s ${Target.Distance} < 10
+		/stick off
+		/attack on
+		/if (${Target.Type.Equal[NPC]}) /squelch /face nolook
+	}
+/return

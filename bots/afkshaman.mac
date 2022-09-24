@@ -1,0 +1,15 @@
+#warning
+
+sub main
+	/echo ---------AFK Shaman----------
+	
+	:killLoop
+		/assist group
+		/if (${Target.Type.NotEqual[Pet]} && ${Target.ID} && ${Target.Distance} < 60 && ${Target.PctHPs} < 90 && !${Target.Dead}) {
+			/casting "Blood of Kerafyrm"
+			/delay 45s
+		}
+		/if (${Me.CombatState.NotEqual[COMBAT]} && !${Me.Sitting}) /sit
+		/delay 2s
+	/goto :killLoop
+/return

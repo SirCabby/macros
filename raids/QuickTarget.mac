@@ -1,0 +1,10 @@
+#warning
+
+sub main
+	
+	/if (${NearestSpawn[npc Warden notid ${Target.ID}].ID}) {
+		/target npc Warden notid ${Target.ID}
+	}
+	
+	/squelch /end
+/return

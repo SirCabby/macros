@@ -1,0 +1,22 @@
+#warning
+
+Sub main 
+	/declare ID local 0
+	|-- Pick a target 
+	:loop
+	
+	/if (!${ID}) /varset ID ${Spawn[npc shard radius 5 loc   0 -280].ID}
+	/if (!${ID}) /varset ID ${Spawn[npc shard radius 5 loc -57 -366].ID}
+	/if (!${ID}) /varset ID ${Spawn[npc shard radius 5 loc  57 -366].ID}
+	/if (!${ID}) {
+		/if (${Spawn[npc anashti].PctHPs}>60) /varset ID ${Spawn[npc anashti].ID}
+	}
+	
+	/if (${ID} && ${ID}!=${Target.ID}) {
+		/target id ${ID}
+		/delay 1s ${Target.ID} == ${ID}
+		/stick
+		/echo >> NEW TARGET [ ${Target.Name} ]
+	}
+	/goto :loop
+/return

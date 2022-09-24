@@ -1,0 +1,64 @@
+#include cabby_inc\set.inc
+
+Sub Main
+    /mqclear
+    /declare myset[10] int outer
+    /declare DebugSet bool outer TRUE
+
+    /call setIntAdd myset 3
+    /call setIntPrint myset
+    /call setIntAdd myset 3
+    /call setIntPrint myset
+    /call setIntAdd myset 5
+    /call setIntPrint myset
+    /call setIntAdd myset 1
+    /call setIntPrint myset
+    /call setIntAdd myset 8
+    /call setIntPrint myset
+    /call setIntRemove myset 3
+    /call setIntPrint myset
+    /call setContains myset 3
+    /echo Contains 3: ${Macro.Return}
+    /call setIntPrint myset
+    /call setContains myset 9
+    /echo Contains 9: ${Macro.Return}
+    /call setIntPrint myset
+    /call setContains myset 8
+    /echo Contains 8: ${Macro.Return}
+    /call setIntPrint myset
+    /call setIntRemove myset 1
+    /call setContains myset 1
+    /echo Contains 1: ${Macro.Return}
+    /call setIntPrint myset
+    /call setIntAdd myset 4
+    /call setIntPrint myset
+    /call setPrintFull myset
+
+    /declare myset2[10] string outer
+    /call setStringAdd myset2 "foo"
+    /call setStringPrint myset2
+    /call setStringAdd myset2 "foo"
+    /call setStringPrint myset2
+    /call setStringAdd myset2 "bar"
+    /call setStringPrint myset2
+    /call setStringAdd myset2 "baz"
+    /call setStringPrint myset2
+    /call setStringAdd myset2 "boo"
+    /call setStringPrint myset2
+    /call setStringRemove myset2 "foo"
+    /call setStringPrint myset2
+    /call setContains myset2 "foo"
+    /echo Contains foo: ${Macro.Return}
+    /call setContains myset2 "zag"
+    /echo Contains zag: ${Macro.Return}
+    /call setContains myset2 "baz"
+    /echo Contains baz: ${Macro.Return}
+    /call setStringRemove myset2 "baz"
+    /call setStringPrint myset2
+    /call setContains myset2 "baz"
+    /call setStringPrint myset2
+    /call setStringAdd myset2 "four"
+    /call setStringPrint myset2
+    /call setPrintFull myset2
+
+/return

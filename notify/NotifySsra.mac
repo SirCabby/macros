@@ -1,0 +1,22 @@
+#warning
+
+#include Notify.inc
+
+| Supposedly a 7 day spawn cycle, guessing 6 days +/- 12 hours, but should be checking after 5 days
+
+sub main
+	/declare mobCount int outer 2
+	/call SetupNotifyVars
+	|/call setupAnchor
+	|/call setupLoot
+	
+	/call ArrayAdder "Blood of Ssraeshza"
+	/call ArrayAdder "Emperor Ssraeshza"
+	|TODO, add Vyzh`dra the Cursed checks
+	
+	/echo ---------Notify Ssra----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

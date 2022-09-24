@@ -1,0 +1,90 @@
+#warning
+#turbo
+
+#define DestroyItemCount 10
+
+#event OutOfStuff "Sorry, but you don't have everything you need for this recipe in your general inventory." 
+#event SkillUped "#*#You have become better at #*#! (#1#)#*#"
+#event attempt "#*#the items together#*#"
+#event invFull "#*#There are no open slots for the held item in your inventory#*#"
+  
+Sub Main 
+    /echo Let's Combine!!
+	
+    /declare skillup int outer 0
+    /declare skillValue int outer 0
+    /declare attempts int outer 0
+
+    /declare DestroyItemArray[DestroyItemCount] string outer
+	/declare index int outer
+	/declare destroyItem bool outer FALSE
+	
+	/varset DestroyItemArray[1] Pristine Silk Glove Template
+	
+    :Loop 
+		/notify TradeskillWnd CombineButton leftmouseup 
+		/doevents
+		/delay 2
+
+        :ClearCursor 
+		/if (${Cursor.ID}) { 
+            /call shouldDestroyItem "${Cursor.Name}"
+            /if (${destroyItem}) {
+                /destroy
+                /varset destroyItem FALSE
+            } else {
+                /notify TradeskillWnd AutoInvButton leftmouseup
+            }
+            /delay 2 ${Cursor.ID}
+            /doevents invFull
+            /goto :ClearCursor
+        }
+    /goto :Loop 
+/return 
+
+Sub Event_SkillUped(filter, value)
+    /varcalc skillup ${skillup}+1
+    /varset skillValue ${value}
+    /call wrapup
+/return
+
+Sub wrapup
+	/declare Minutes int inner 0
+	/declare Seconds int inner 0
+	
+	/varcalc Minutes ${Math.Calc[${Macro.RunTime}/60]}
+	/varcalc Seconds ${Math.Calc[${Macro.RunTime}%60]}
+	
+    /echo Total runtime: ${Minutes} Minutes, ${Seconds} Seconds
+    /echo Total skill ups: ${skillup}
+    /echo Attempts: ${attempts}
+    /if (${skillValue} > 0) {
+		/echo Current Skill: ${skillValue}
+    }
+/return
+
+Sub Event_OutOfStuff
+    /call wrapup
+	/echo Out of stuff
+    /endmacro
+/return
+
+Sub Event_attempt
+	/varcalc attempts ${attempts}+1
+/return
+
+Sub Event_invFull
+    /call wrapup
+    /echo Your inventory is full, clear some space before rerunning. Aborting...
+    /endmacro
+/return
+
+Sub shouldDestroyItem(string itemName)
+	/varset destroyItem FALSE
+	/for index 1 to DestroyItemCount
+		/if (${DestroyItemArray[${index}].Equal[${itemName}]}) {
+			/varset destroyItem TRUE
+		} else {
+			/next index
+		}
+/return

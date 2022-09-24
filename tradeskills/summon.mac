@@ -1,0 +1,16 @@
+#warning
+
+Sub Main
+    /echo Chain Summoning
+	
+    :Loop
+	
+		/if (${Cursor.ID}) {
+			/autoinv
+		}
+	
+		/casting "Mass Thicken Mana"
+		/delay 10s
+		
+    /goto :Loop
+/return

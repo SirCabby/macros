@@ -1,0 +1,26 @@
+#warning
+
+#include FollowEngine.inc
+
+#define master ""
+
+#define ZoneInstance "Beasts' Domain"
+#define ZoneStatic "Argath, Bastion of Illdaera"
+#define QuestGiver "Captain Portencia"
+#define EnterPhrase "ready"
+
+Sub Main
+	/echo Following master
+
+	/call SetupFollowVars
+	
+	:InstanceLoop
+		| Argath logic
+		/call EnterInstance "QuestGiver" "EnterPhrase" "ZoneInstance"
+		
+		/call FollowLoop
+		
+		| Exit logic
+		/call RemoveInstance "ZoneStatic"
+	/goto :InstanceLoop
+/return

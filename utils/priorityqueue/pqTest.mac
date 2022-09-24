@@ -1,0 +1,41 @@
+#include cabby_inc\priorityQueue.inc
+
+Sub Main
+    /declare debug  bool    outer   true
+
+    /mqclear
+    /call initPriorityQueue
+
+    /call printQueue
+    /call insertPriorityQueue 3 "foo"
+    /call printQueue
+    /call insertPriorityQueue 4 "bar"
+    /call printQueue
+    /call insertPriorityQueue 5 "zoo"
+    /call printQueue
+    /call insertPriorityQueue 3 "bazzar"
+    /call printQueue
+    /call insertPriorityQueue 1 "skip"
+    /call printQueue
+    /call setNextPriorityQueue
+    /call completePriorityQueue
+    /call printQueue
+    /call removePriorityQueue 2
+    /call printQueue
+    /call removePriorityQueue 10
+    /call printQueue
+    /call setNextPriorityQueue
+    /call completePriorityQueue
+    /call printQueue
+    /call setNextPriorityQueue
+    /call completePriorityQueue
+    /call printQueue
+    /call setNextPriorityQueue
+    /call completePriorityQueue
+    /call printQueue
+    /call setNextPriorityQueue
+    /call completePriorityQueue
+    /call printQueue
+    /call insertPriorityQueue 3 "foo"
+    /call printQueue
+/return

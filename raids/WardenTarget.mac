@@ -1,0 +1,15 @@
+#warning
+
+#define Radius 300
+
+sub main
+	/squelch /hidecorpses npc
+	/squelch /high Warden
+	/if (${Bool[${NearestSpawn[npc Warden class Ranger radius Radius los notid ${Target.ID}]}]}) {
+		/squelch /target npc Warden class Ranger radius Radius notid ${Target.ID}
+	} else /if (${Bool[${NearestSpawn[npc Warden radius Radius los notid ${Target.ID}]}]}) {
+		/squelch /target npc Warden radius Radius notid ${Target.ID}
+	}
+	
+	/squelch /end
+/return

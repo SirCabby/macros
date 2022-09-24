@@ -1,0 +1,23 @@
+#warning
+
+#include Notify.inc
+
+| Venril Sathir spawns on a 36 hour +/- 12 hour cycle: 31h, 41h, 42h, 44h, 45h, 25h, 20h
+| Venril Sathir`s remains spawns on a 20 hour +/- 1 hour cycle (confirmed)
+
+sub main
+	/declare mobCount int outer 3
+	/call SetupNotifyVars
+	|/call setupAnchor
+	|/call setupLoot
+	
+	/call ArrayAdder "Venril Sathir" TRUE
+	/call ArrayAdder "Venril Sathir`s remains" TRUE
+	/call ArrayAdder "Spirit of Venril Sathir"
+	
+	/echo ---------Notify Venril Sathir----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

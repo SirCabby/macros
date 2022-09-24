@@ -1,0 +1,25 @@
+#warning
+
+#include Ninjadvloot.inc
+
+Sub main
+	/call SetupAdvLootVars
+	
+	/if (${Group} && !${Group.MasterLooter.ID}) {
+		/grouproles set ${Me.Name} 5
+		/delay 5s ${Group.MasterLooter.ID}==${Me.ID}
+	}
+	
+	/while (${Group.MasterLooter.ID}==${Me.ID} && ${AdvLoot.SCount} > 0) {
+		/delay 5s !${AdvLoot.LootInProgress}
+		/call SafeLoot shared ${AdvLoot.SCount} leave
+		/delay 4
+	}
+	
+	/while (${AdvLoot.PCount} > 0) {
+		/delay 5s !${AdvLoot.LootInProgress}
+		/call SafeLoot personal ${AdvLoot.PCount} leave
+		/delay 4
+	}
+	
+/return

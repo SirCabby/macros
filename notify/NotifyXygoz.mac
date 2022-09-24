@@ -1,0 +1,19 @@
+#warning
+
+#include Notify.inc
+
+| Xygoz spawns on a 3 day +/- 12 hour cycle
+
+sub main
+	/declare mobCount int outer 1
+	/call SetupNotifyVars
+	/varset doLoot TRUE
+	
+	/call ArrayAdder "Xygoz"
+	
+	/echo ---------Notify Xygoz----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

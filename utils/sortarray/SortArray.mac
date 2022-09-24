@@ -1,0 +1,25 @@
+#warning
+
+#include SortArray.inc
+
+sub main
+	| Populate array
+	/declare StringArray[10] string	outer
+	/varset StringArray[1] "Jennifer"
+	/varset StringArray[2] Becky
+	/varset StringArray[3] Claire
+	/varset StringArray[4] "Michelle"
+	| Skip 5
+	/varset StringArray[6] "Sarah"
+	/varset StringArray[7] Althea
+	/varset StringArray[8] Maggie
+	| Skip 9, 10
+	
+	/echo Time: ${Time}
+	/call SortArray "StringArray" "AlphabeticalStringComparer"
+	/echo Time2: ${Time}
+	
+	/call PrintArray "StringArray"
+	
+	| Expected: Althea, Becky, Claire, Jennifer, Maggie, Michelle, Sarah, "", "", ""
+/return

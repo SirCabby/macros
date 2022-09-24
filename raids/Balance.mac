@@ -1,0 +1,57 @@
+#warning
+
+Sub Main 
+	/declare i int local
+
+	/declare TagID int local
+	/declare MaxHP int local
+	/declare MinHP int local
+	/declare MaxID int local
+	/declare DelHP int local
+	/declare List string
+	/declare RepTM timer 
+	/declare ok int local 0
+
+	:Loop
+		/varset MinHP 100
+		/varset MaxHP 0
+		/varset MaxID 0
+		/varset List 
+
+		/for i 1 to 16
+			/varset ok 0
+			/if (${Me.XTarget[${i}].Name.Equal[Rear Guard Captain Balreth]}) /varset ok 1
+			/if (${Me.XTarget[${i}].Name.Left[6].Equal[Aspect]}) /varset ok 1
+			|/if (${Me.XTarget[${i}].Name.NotEqual[NULL]}) /varset ok 1
+			|/varset ok 1
+		
+			/if (${ok}) {
+				/if (${Me.XTarget[${i}].ID}!=${Target.ID}) /varset List ${List} |   ${Me.XTarget[${i}].PctHPs}  
+				/if (${Me.XTarget[${i}].ID}==${Target.ID}) /varset List ${List} | >${Me.XTarget[${i}].PctHPs}
+				
+				/if (${Me.XTarget[${i}].PctHPs} > ${MaxHP}) {
+					/varset MaxHP ${Me.XTarget[${i}].PctHPs}
+					/varset MaxID ${Me.XTarget[${i}].ID}
+				}
+				/if (${Me.XTarget[${i}].PctHPs} < ${MinHP}) {
+					/varset MinHP ${Me.XTarget[${i}].PctHPs}
+				}
+			}
+		/next i
+		
+		/varcalc DelHP ${MaxHP} - ${MinHP}
+		/echo ${List} | Max: ${MaxHP} | Min: ${MinHP} | Delta: ${DelHP} 
+		/if (!${RepTM}) {
+			/bc ${List} | Max: ${MaxHP} | Min: ${MinHP} | Delta: ${DelHP} 
+			/varset RepTM 1s
+		}
+		
+		/if (${MaxID}) {
+			/if (${MaxID}!=${Target.ID}) /target id ${MaxID}
+			/if (!${Me.AutoFire}) /autofire on
+		}
+		/delay 1
+	/goto :Loop
+/return
+
+

@@ -1,0 +1,9 @@
+#warning
+
+Sub Main 
+    :Loop
+		/if (${Cursor.ID}) { 
+			/destroy
+		} 
+    /goto :Loop 
+/return 

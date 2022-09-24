@@ -1,0 +1,46 @@
+#warning
+
+#define dssong "Psalm of the Forsaken"
+#define aggroGemNum 7
+
+#event dskill "#*#DSKILL#*#"
+
+Sub Main
+	/call Melody aggroGemNum
+	:loop
+		/doevents
+	/goto :loop
+/return
+
+Sub Event_dskill
+	| Stop currently playing aggro song
+	/stopcast
+	/delay 2s
+	
+	| Get DS going
+	:dsLoop
+		/cast "dssong"
+		/delay 6s ${Me.Song[dssong].ID}
+	/if (!${Me.Song[dssong].ID}) /goto :dsLoop
+	
+	| Sit until all dead
+	:sitLoop
+		/if (${Me.Standing}) /sit
+		/delay 5
+	/if (${Me.CombatState.Equal[Combat]}) /goto :sitLoop
+	
+	| All should be dead now, reset aggro song
+	/stopcast
+	/delay 2s
+	/call Melody aggroGemNum
+	
+	|/end
+/return
+
+Sub Melody(int gem)
+	/stopcast
+	:melodyLoop
+		/if (${Me.Casting}) /delay 4s !${Me.Casting}
+		/melody aggroGemNum
+	/if (${Me.Casting.Name.NotEqual[${Me.Gem[${gem}]}]}) /goto :melodyLoop
+/return

@@ -1,0 +1,15 @@
+#warning
+#turbo 120
+
+#include Ninjadvloot.inc
+
+Sub main
+	/echo Selling Items
+	/call SetupAdvLootVars
+	/varset useGlobalCache TRUE
+	/call ReportInventoryItemValue
+	
+	/call DoLootStuff sell
+	
+	/call ReportSoldProfit
+/return

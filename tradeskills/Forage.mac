@@ -1,0 +1,41 @@
+#warning
+
+#define DestroyItemCount 10
+
+Sub main
+	/echo Foraging
+	
+	/declare DestroyItemArray[DestroyItemCount] string outer
+	/declare index int outer 1
+	/declare destroyItem bool outer FALSE
+	
+	/varset DestroyItemArray[1] Pod of Water
+	/varset DestroyItemArray[2] Fishing Grubs
+	
+	:Loop
+		/if (${Cursor.ID}) {
+			/call shouldDestroyItem "${Cursor.Name}"
+			/if (${destroyItem}) {
+				/echo Destroying: ${Cursor.Name}
+				/destroy
+				/varset destroyItem FALSE
+			} else {
+				/echo Found: ${Cursor.Name}
+				/autoinv
+			}
+		}
+		
+		/if (${Me.AbilityReady[Forage]}) /doability Forage
+		/delay 5s ${Me.AbilityReady[Forage]} || ${Cursor.ID}
+	/goto :Loop
+/return
+
+Sub shouldDestroyItem(string itemName)
+	/varset destroyItem FALSE
+	/for index 1 to DestroyItemCount
+		/if (${DestroyItemArray[${index}].Equal[${itemName}]}) {
+			/varset destroyItem TRUE
+		} else {
+			/next index
+		}
+/return

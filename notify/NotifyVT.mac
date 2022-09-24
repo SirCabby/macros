@@ -1,0 +1,29 @@
+#warning
+
+#include Notify.inc
+
+| VT spawns on a 6 day +/- 12 hour cycle (seems more likely to be around 5.5 days)
+
+sub main
+	/declare mobCount int outer 10
+	/call SetupNotifyVars
+	|/call setupAnchor
+	|/call setupLoot
+	
+	/call ArrayAdder "Aten Ha Ra"
+	/call ArrayAdder "Diabo Xi Xin Thall"
+	/call ArrayAdder "Kaas Thox Xi Aten Ha Ra"
+	/call ArrayAdder "Va Xi Aten Ha Ra"
+	/call ArrayAdder "Kaas Thox Xi Ans Dyek"
+	/call ArrayAdder "Diabo Xi Xin"
+	/call ArrayAdder "Diabo Xi Va"
+	/call ArrayAdder "Diabo Xi Va Temariel"
+	/call ArrayAdder "Thall Xundraux Diabo"
+	/call ArrayAdder "Thall Va Kelun"
+	
+	/echo ---------Notify Vex Thal----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

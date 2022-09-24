@@ -1,0 +1,41 @@
+#warning
+
+#define MAX_AUG_SLOTS 10
+
+Sub main
+	/declare bitTotal int local 256
+	/declare augTypes[MAX_AUG_SLOTS] int local
+	/declare i int local 1
+	/declare augType int local 1
+	
+	:loop
+		/if (${bitTotal} <= 0) {
+			/echo No augs
+			| Done
+		} else /if (${bitTotal} == 1) {
+			| Found a type 1
+			/varset augTypes[${i}] 1
+			| Done
+		} else /if (${bitTotal} == 2) {
+			| Found the type!
+			/varcalc augTypes[${i}] ${augType} + 1
+			| Done
+		} else {
+			/if (${Math.Calc[${bitTotal} % 2]} == 1) {
+				| We found one of multiple types...
+				/varset augTypes[${i}] ${augType}
+				/varcalc bitTotal ${bitTotal} - 1
+				/varcalc i ${i} + 1
+			}
+			/if (${bitTotal} != 2) {
+				/varcalc bitTotal ${bitTotal} / 2
+				/varcalc augType ${augType} + 1
+			}
+			/goto :loop
+		}	
+		
+	/for i 1 to MAX_AUG_SLOTS
+		/if (${augTypes[${i}]} > 0) /echo Aug${i}: ${augTypes[${i}]}
+	/next i
+	
+/return

@@ -1,0 +1,11 @@
+#warning
+#turbo 120
+
+#include Ninjadvloot.inc
+
+Sub main
+	/call SetupAdvLootVars
+	/varset useGlobalCache TRUE
+	
+	/call ReportInventoryItemValue
+/return

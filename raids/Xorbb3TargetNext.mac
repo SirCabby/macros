@@ -1,0 +1,21 @@
+#warning
+
+#define Radius 150
+
+sub main
+	/declare mob int outer 1
+	/declare MobArray[4] string outer
+	/varset MobArray[1] "a flamenerve goblin"
+	/varset MobArray[2] "a stalwart minotaur"
+	/varset MobArray[3] "a weakminded goblin"
+	/varset MobArray[4] "a hobblefooted fungus"
+	
+	/for mob 1 to 4
+		/if (${NearestSpawn[npc ${MobArray[${mob}]} radius Radius notid ${Target.ID}].CleanName.Equal[${MobArray[${mob}]}]}) {
+			/target npc ${MobArray[${mob}]} radius Radius notid ${Target.ID}
+			/squelch /end
+		}
+	/next mob
+	
+	/squelch /end
+/return

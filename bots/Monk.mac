@@ -1,0 +1,182 @@
+#warning
+
+#include Ninjadvloot.inc
+
+#define CenterViewButton Home
+
+| Define Names
+#define SynergyDisc 	"Doomwalker's Synergy"
+#define RestDisc 		"Breather"
+#define RestCap 		0.18
+#define TorrentDisc 	"Torrent of Fists"
+
+| Define timers
+#define ClickieRetryTimerValue 	1m
+#define InterruptTimerValue 	1s
+#define SynergyTimerValue 		1s
+#define TorrentTimerValue 		1s
+#define StunningKickTimerValue 	1s
+#define FangTimerValue 			1s
+#define VSTimerValue 			1s
+#define BanestrikeTimerValue 	1s
+#define EpicTimerValue 			5s
+
+#event ClickieFailed	"#*#Your spell did not take hold#*#"
+
+Sub main
+	/echo GoGo Monk
+	
+	| Timer related stuff
+	/declare ClickieRetryTimerName 		string 	outer 	0
+	/declare InterruptTimer 			timer 	outer 	0
+	/declare SynergyTimer 				timer 	outer 	0
+	/declare TorrentTimer 				timer 	outer 	0
+	/declare StunningKickTimer 			timer 	outer 	0
+	/declare FangTimer 					timer 	outer 	0
+	/declare VSTimer 					timer 	outer 	0
+	/declare BanestrikeTimer 			timer 	outer 	0
+	/declare EpicTimer 					timer 	outer 	0
+	
+	| Toggles (can be changed in game. Ex: /varset RestToggle FALSE)
+	/declare RestToggle 				bool 	outer 	TRUE
+	/declare ClickieToggle 				bool 	outer 	TRUE
+	/declare DmgShieldToggle 			bool 	outer 	TRUE
+	
+	| Toggles better used in MQ2Melee shits (can quickly disable without stopping macro)
+	
+	| Stick if attacking
+	/declare StickToggle 				int 	outer 	1 		| 0=off, 1=fixed, 2=dynamic
+	
+	| Attack target if sticking
+	/declare StickAttackToggle 			bool 	outer 	FALSE
+	
+	| Clear corpse target if in combat
+	/declare CorpseTargetClearToggle 	bool 	outer 	TRUE
+	
+	| Attack NPC if in combat
+	/declare AggroAttackerToggle 		bool 	outer 	TRUE
+	
+	| Setup loot
+	/call SetupAdvLootVars
+	
+	| Set TRUE at runtime to loot (hotkey /varset CallLoot TRUE)
+	/declare CallLoot 					bool 	outer 	FALSE
+	
+	:Loop
+		| stuff to do regardless of combat state
+		/if (${Bool[${Me.Casting.ID}]} && ${Me.Moving}) {
+			/interrupt
+			/varset InterruptTimer InterruptTimerValue
+		}
+		/if (${Me.PctHPs} < 50) /doability Mend
+		/call LootAll
+		
+		| Combat dependant stuff
+		/if (!${Me.Combat}) {
+			| Disablers
+			/if (!${Me.Feigning} && !${Me.Ducking} && !${Me.Sneaking} && !${Me.AFK} && !${Me.Binding} && !${Me.State.Equal[STUN]} && !${Me.Trader}) {
+				/if (${RestToggle} && ${Me.CombatState.NotEqual[COMBAT]} && ${Me.CombatAbilityReady[RestDisc]} && (${Math.Calc[${Me.CurrentEndurance}/${Me.MaxEndurance}]} < RestCap) && !${Melee.DiscID} && ${Me.Casting.Name.NotEqual[NULL]}) /disc RestDisc
+				/if (${ClickieToggle} && !${Me.Moving} && !${Me.Invis} && !${Stick.Active} && !${Me.Casting.ID}) {
+					/if (${EpicTimer}==0 && ${Cast.Ready[Transcended Fistwraps of Immortality]} && (${Me.PctHPs} < 80)) {
+						/if (${Stick.Active}) /squelch /stick off
+						/casting "Transcended Fistwraps of Immortality"
+						/varset EpicTimer EpicTimerValue
+					}
+					/call Clickie "Twitching Speed" "Lizardscale Plated Girdle" "Haste"
+					/call Clickie "Ancient Flames" "Ancient Cloak of Flames" "OH"
+					/call Clickie "Might of Stone IX" "Vale Lord's Sieging Eye" "Attack"
+					/call Clickie "Form of Defense XIII" "Sign of Fury" "AC"
+					/call Clickie "Myrmidon's Skill XI" "Horrorsilk Mantle" "Dodge"
+					/call Clickie "Familiar: Battle Ogre" "Rallosian Battle Figure" "Familiar"
+					/call Clickie "Frightful Aura" "Grelleth's Royal Seal" "StunProc"
+					/if (${Me.Pet.ID} && ${Me.Buff[Familiar: Battle Ogre].ID}) /pet leave
+					/if (${Spell[Master's Aura].Stacks[0]} && ${Me.CombatState.NotEqual[COMBAT]} && !${Bool[${Me.Aura}]} && ${Me.CombatAbilityReady[Master's Aura]} && ${Me.CurrentEndurance} > 250) /disc Master
+					/if (${DmgShieldToggle}) {
+						/call Clickie "Storm Guard" "Stormeye Band" "DSOne"
+						/call Clickie "Illusionary Spikes VII" "Drapings of the Wild" "DSTwo"
+					}
+				}
+				
+				/if (${CorpseTargetClearToggle} && ${Me.CombatState.Equal[COMBAT]} && (${Target.Dead} || ${Target.Type.Equal[Corpse]})) /squelch /target clear
+				/if (!${Me.Casting.ID}) {
+					/if (${StickAttackToggle} && ${Stick.Active} && ${Target.Type.Equal[NPC]} && ${Target.Distance} < 50) {
+						/face nolook
+						/squelch /attack on
+					}
+					/if (${AggroAttackerToggle} && ${Me.CombatState.Equal[COMBAT]} && ${Target.Type.Equal[NPC]}) {
+						/face nolook
+						/squelch /attack on
+					}
+				}
+			}
+		} else {
+			/if (${Target.ID}) {
+				/if (${StickToggle} > 0 && !${Stick.Active}) {
+					/if (${StickToggle}==1) /squelch /stick loose 10
+					/if (${StickToggle}==2) /squelch /stick loose ${Math.Calc[${Target.MaxRangeTo}-3]}
+				}
+				/if (!${Me.Feigning} && !${Me.State.Equal[STUN]}) {
+					/if (${EpicTimer}==0 && ${Cast.Ready[Transcended Fistwraps of Immortality]} && (${Me.PctHPs} < 80) && !${Me.Moving}) {
+						/casting "Transcended Fistwraps of Immortality"
+						/varset EpicTimer EpicTimerValue
+					}
+					/if (${SynergyTimer}==0 && ${Target.Type.NotEqual[PC]} && ${Me.CombatAbilityReady[SynergyDisc]} && ${Target.Distance} < 50) {
+						/disc SynergyDisc
+						/varset SynergyTimer SynergyTimerValue
+					}
+					/if (${TorrentTimer}==0 && ${Target.Type.NotEqual[PC]} && ${Me.CombatAbilityReady[TorrentDisc]} && ${Target.Distance} < 50) {
+						/disc TorrentDisc
+						/varset TorrentTimer TorrentTimerValue
+					}
+					/if (${StunningKickTimer}==0 && ${Me.AltAbilityReady[Stunning Kick]} && ${Target.Distance} < 50) {
+						/aa act Stunning Kick
+						/varset StunningKickTimer StunningKickTimerValue
+					}
+					/if (${Me.AbilityReady[Flying Kick]} && ${Target.Distance} < 20) /doability "Flying Kick"
+					/if (${Me.AbilityReady[Tiger Claw]} && ${Target.Distance} < 20) /doability "Tiger Claw"
+					/if (${FangTimer}==0 && ${Me.CombatAbilityReady[Zalikor's Fang Rk. III]} && ${Target.Distance} < 50) {
+						/disc Zalikor's Fang Rk. III
+						/varset FangTimer FangTimerValue
+					}
+					/if (${BanestrikeTimer}==0 && ${Target.Type.NotEqual[PC]} && ${Me.AltAbilityReady[Banestrike]}) {
+						/alt act 15073
+						/varset BanestrikeTimer BanestrikeTimerValue
+					}
+					/if (${VSTimer}==0 && ${Me.CombatAbilityReady[Vigorous Shuriken Rk. III]} && ${Target.Distance} < 175 && ${Target.Distance} > 50) {
+						/disc Vigorous Shuriken Rk. III
+						/varset VSTimer VSTimerValue
+					}
+				}
+			}
+		}
+	/goto :Loop
+/return
+
+Sub Clickie(string SpellName, string ItemName, string TimerName)
+	/varset ClickieRetryTimerName ${TimerName}Timer
+	:CastingWait
+		/if (${Me.Casting.ID}) {
+			/if (${Stick.Active}) /interrupt
+			/goto :CastingWait
+		}
+	/if (${Stick.Active}) /squelch /stick off
+	/if ((!${Defined[${ClickieRetryTimerName}]} || ${${ClickieRetryTimerName}}==0) && ${Spell[${SpellName}].Stacks} && !${Me.Buff[${SpellName}].ID}) /casting "${ItemName}"
+	/doevents ClickieFailed
+/return
+
+Sub Event_ClickieFailed
+	/if (${ClickieRetryTimerName.NotEqual[NULL]}) {
+		/if (!${Defined[${ClickieRetryTimerName}]}) /declare ${ClickieRetryTimerName} timer outer ClickieRetryTimerName
+	} else {
+		/varset ClickieRetryTimerName 1m
+	}
+/return
+
+Sub LootAll
+	/if (${CallLoot}) {
+		/call LootMobs
+		| Return field of view
+		/keypress CenterViewButton
+		/varset CallLoot FALSE
+	}
+/return

@@ -1,0 +1,13 @@
+#warning
+
+#include Ninjadvloot.inc
+
+Sub Main
+	/call SetupAdvLootVars
+
+	/if (${Cursor.ID}) {
+		/call HandleItem "${Cursor.Name}" Price
+	} else {
+		/echo No item on cursor
+	}
+/return

@@ -1,0 +1,32 @@
+#warning
+
+#include Ninjadvloot.inc
+
+#define CenterViewButton Home
+
+Sub main
+	/call SetupAdvLootVars
+	
+	/if (${Group} && !${Group.MasterLooter.ID}) {
+		/grouproles set ${Me.Name} 5
+		/delay 5s ${Group.MasterLooter.ID}==${Me.ID}
+	}
+	
+	:lootLoop
+		/if (${Me.UseAdvancedLooting}) {
+			/call UseAdvLoot
+			
+			| Leave all that's left over
+			/while (${AdvLoot.PCount} > 0) {
+				/delay 5s !${AdvLoot.LootInProgress}
+				/call SafeLoot personal ${AdvLoot.PCount} leave
+				/delay 4
+			}
+		} else {
+			/call LootMobs
+			| Return field of view
+			/keypress CenterViewButton
+		}
+		/delay 10s
+	/goto :lootLoop
+/return

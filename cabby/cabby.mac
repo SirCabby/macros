@@ -1,0 +1,120 @@
+#turbo 240
+
+#include cabby_inc\setup.inc
+
+Sub Main
+    /mqclear
+
+    | Must declare before referencing in some places
+    /declare configFilePath         string  outer   "cabby\\${Me.Name}-Config.ini"
+    /declare DebugAll               string  outer   ${Ini[${configFilePath},Debug,All]}
+    /declare DebugPriorityQueue     bool    outer   ${Ini[${configFilePath},Debug,PriorityQueue]}
+    /declare DebugSet               bool    outer   ${Ini[${configFilePath},Debug,Set]}
+    /declare DebugSetup             bool    outer   ${Ini[${configFilePath},Debug,Setup]}
+
+    /echo Loading Cabby script...
+    /if (${DebugAll}) /echo Debug All Mode: ON
+    /call cabbySetup
+    /echo `/chelp` for help
+    /echo Cabby script is running...
+
+    :mainLoop
+        /doevents
+        /call doNextJob
+        |/delay 2
+    /goto :mainLoop
+/return
+
+| Manage and prioritize jobs
+Sub doNextJob
+    | Is there a job to do?
+    /call setNextPriorityQueue
+    /if (${currentJobKey} < 1) /return
+
+    | Setup the job to be executed
+    /call getPriorityQueueKeyIndex ${currentJobKey}
+    /declare jobIndex int local ${Macro.Return}
+    /if (${jobIndex} < 1) {
+        /echo ERROR: Was unable to find job key
+        /endmacro
+    }
+    /varset currentJobString ${jobQueue[${jobIndex}]}
+    /varset currentJobCommand ${currentJobString.Arg[1]}
+    /declare argLength int local ${Math.Calc[${currentJobString.Length} - ${currentJobCommand.Length} - 1]}
+    /if (${argLength} > 0) {
+        /varset currentJobArgs ${currentJobString.Right[${argLength}]}
+    } else {
+        /varset currentJobArgs
+    }
+    /if (${DebugAll} || ${DebugPriorityQueue}) {
+        /echo command: ${currentJobCommand}
+        /echo args: ${currentJobArgs}
+    }
+
+    | Execute the job
+    /call cabby_${currentJobCommand} "${currentJobArgs}"
+    /if (${Macro.Return}) {
+        | This job is done
+        /call completePriorityQueue
+    } else {
+        | Sleep this task and re-evaluate it once timer expires
+        /call resetPriorityQueueTimer
+    }
+/return
+
+:OnExit
+    /echo Goodnight cabby...
+/return
+
+| TODO
+|x Main settings ini file
+|x   Debugs and more
+|x   Aliases for commands
+|x Ini updates via commands
+|x Show config statuses
+|x Help Menu
+|x Relay tells as bct to RelayTellsTo
+|x Send tells from this char
+|x state machines (following, buffs, combat, etc)
+|x Check follow state for stuck
+| Looting
+|   deal with corpses that aren't ours
+|   selling
+| HasItem() command to ask all bots if they have a specific item
+| AA exp management
+| Trading
+| Tasks
+| Click Yes on window
+| Raids / DZ
+| class inis
+| general combat
+| Roles (healing, tanking, melee, casting, mezzing, pulling, etc)
+| Flee command / state - stop everything and run away
+| Load spell sets
+| Debuffing mobs
+| Bard weapon swapping for songs
+| AE spells
+| Burns
+| Cures
+| Combat-only abilities (heals that should be saved for last resort etc)
+| Heal prioritization (tanks first, low hp chars, etc)
+|   heal requirements predictions
+| Heal out of group chars
+| Tanking - grab aggros, avoid mez targets
+| Alternate loadouts for skills / abilities to use depending on situation
+|   - Load with default abilities found, let users override if want to
+
+|xkeep track of current job in the queue for later removal 
+|x    - by job using set to add / remove so know it's unique
+|xsearch for priority tasks up until current level job
+|x    - SQS Queue style visibility timeouts for "checks" that need to be skipped to allow for further executions
+|shared responsibility handling, heals, tank targets, rezzing, etc
+|    - MQ2KeyStore plugin idea for storing kvps
+|    - put shared tasks into shared store and do atomic operations to assign to roles
+|    - main healer and secondary healer could swap roles if main healer dies etc.
+| some kind of override to allow for custom logic?
+| Tie into soloengine type thing for allowing for camping macros to be used with this
+
+general combat
+melee   caster  healer
+monk war 

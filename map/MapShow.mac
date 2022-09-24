@@ -1,0 +1,23 @@
+#warning
+
+|#define MobCount 3
+
+sub main
+	/declare mob int inner 1
+	/declare mobA int inner 1
+	|/declare MobArray[MobCount] string inner
+	|/varset MobArray[1] "a mechanic"
+	|/varset MobArray[2] "a power station operator"
+	|/varset MobArray[3] "a shock trooper"
+	
+	/echo ---------MapShow----------
+	/for mob 1 to ${SpawnCount[npc]}
+		/if (${NearestSpawn[${mob}, npc].Race.Name.Equal[Gnomework]}) {
+			/for mobA 1 to MobCount
+				|/if (${NearestSpawn[${mob}, npc].CleanName.Equal[${MobArray[${mobA}]}]}) {
+					/mapshow ${NearestSpawn[${mob}, npc]}
+				|}
+			/next mobA
+		}
+	/next mob
+/return

@@ -1,0 +1,7 @@
+#warning
+
+#include BuyAA.inc
+
+Sub main
+	/call BuyAA "Glyph of Fireworks I"
+/return

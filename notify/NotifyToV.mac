@@ -1,0 +1,39 @@
+#warning
+
+#include Notify.inc
+
+| Thylex of Veeshan despawns to spawn Vulak`Aerr
+| All Lords / Ladies must be down, and one must be killed while Thylex is up for him to despawn and spawn Vulak
+| Thylex of Veeshan spawns on a ? day +/- 12 hour cycle
+
+sub main
+	/call SetupNotifyVars
+	|/call setupAnchor
+	|/call setupLoot
+	
+	/call ArrayAdder "Vulak`Aerr" TRUE
+	|TODO: need to setup condition on this so that it only beeps the rest if this is up (can ignore beeping for this one then)
+	/call ArrayAdder "Thylex of Veeshan" TRUE
+	/call ArrayAdder "Lord Vyemm"
+	/call ArrayAdder "Lord Kreizenn"
+	/call ArrayAdder "Lord Koi`Doken"
+	/call ArrayAdder "Lord Feshlak"
+	/call ArrayAdder "Lendiniara the Keeper"
+	/call ArrayAdder "Lady Nevederia"
+	/call ArrayAdder "Lady Mirenilla"
+	/call ArrayAdder "Sevalak"
+	/call ArrayAdder "Jorlleag"
+	/call ArrayAdder "Dozekar the Cursed"
+	/call ArrayAdder "Dagarn the Destroyer"
+	/call ArrayAdder "Cekenar"
+	/call ArrayAdder "Telkorenar"
+	/call ArrayAdder "Aaryonar"
+	/call ArrayAdder "Zlexak"
+	/call ArrayAdder "Gozzrem"
+	
+	/echo ---------Notify ToV----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

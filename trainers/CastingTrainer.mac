@@ -1,0 +1,154 @@
+#warning
+
+| Could be improved by checking for existence of spell before casting it, and ending if DNE
+| Target choices could be made more intelligent
+| > Since target myself is safest, some damaging spells might be too much for a low level character
+
+Sub Main
+    /echo Chain Casting Trainer
+	
+    :Loop
+	
+		/if (${Cursor.Name.Find[Globe of Water]} || ${Cursor.Name.Find[Halo of Light]}) {
+			/destroy
+		} else /if (${Cursor.ID}) {
+			/autoinv
+		}
+	
+		/if (${Me.Class.Name.Equal[Wizard]}) {
+		
+			/target myself
+		
+			/if (${Me.Skill[Evocation]} < ${Me.SkillCap[Evocation]}) {
+				/casting "Blast of Cold"
+			} else /if (${Me.Skill[Alteration]} < ${Me.SkillCap[Alteration]}) {
+				/casting "Root"
+			} else /if (${Me.Skill[Abjuration]} < ${Me.SkillCap[Abjuration]}) {
+				/casting "Minor Shielding"
+			} else /if (${Me.Skill[Divination]} < ${Me.SkillCap[Divination]}) {
+				/casting "True North"
+			} else /if (${Me.Skill[Conjuration]} < ${Me.SkillCap[Conjuration]}) {
+				/casting "Halo of Light"
+			} else {
+				/end
+			}
+			
+		} else /if (${Me.Class.Name.Equal[Shadow Knight]}) {
+		
+			/if (!${Me.Pet.ID}) {
+				/casting "Leering Corpse"
+				/delay 15s
+				/casting "Leering Corpse"
+			}
+			/target id ${Me.Pet.ID}
+		
+			/if (${Me.Skill[Abjuration]} < ${Me.SkillCap[Abjuration]}) {
+				/casting "Endure Cold"
+			} else /if (${Me.Skill[Conjuration]} < ${Me.SkillCap[Conjuration]}) {
+				/casting "Disease Cloud"
+			} else /if (${Me.Skill[Alteration]} < ${Me.SkillCap[Alteration]}) {
+				/casting "Lifetap"
+			} else /if (${Me.Skill[Evocation]} < ${Me.SkillCap[Evocation]}) {
+				/casting "Ward Undead"
+			} else /if (${Me.Skill[Divination]} < ${Me.SkillCap[Divination]}) {
+				/casting "Sense the Dead"
+			} else {
+				/end
+			}
+			
+		} else /if (${Me.Class.Name.Equal[Cleric]}) {
+			
+			/target myself
+			
+			/if (${Me.Skill[Alteration]} < ${Me.SkillCap[Alteration]}) {
+				/casting "Minor Healing"
+			} else /if (${Me.Skill[Abjuration]} < ${Me.SkillCap[Abjuration]}) {
+				/casting "Holy Armor"
+			} else /if (${Me.Skill[Evocation]} < ${Me.SkillCap[Evocation]}) {
+				/casting "Strike"
+			} else /if (${Me.Skill[Conjuration]} < ${Me.SkillCap[Conjuration]}) {
+				/casting "Summon Drink"
+			} else /if (${Me.Skill[Divination]} < ${Me.SkillCap[Divination]}) {
+				/casting "Sense the Dead"
+			} else {
+				/end
+			}
+			
+		} else /if (${Me.Class.Name.Equal[Shaman]}) {
+		
+			/target myself
+			
+			/if (${Me.Skill[Alteration]} < ${Me.SkillCap[Alteration]}) {
+				/casting "Minor Healing"
+			} else /if (${Me.Skill[Conjuration]} < ${Me.SkillCap[Conjuration]}) {
+				/casting "Sicken"
+			} else /if (${Me.Skill[Evocation]} < ${Me.SkillCap[Evocation]}) {
+				/casting "Burst of Flame"
+			} else /if (${Me.Skill[Abjuration]} < ${Me.SkillCap[Abjuration]}) {
+				/casting "Inner Fire"
+			} else /if (${Me.Skill[Divination]} < ${Me.SkillCap[Divination]}) {
+				/casting "Spirit Sight"
+			} else {
+				/end
+			}
+			
+		} else /if (${Me.Class.Name.Equal[Enchanter]}) {
+			
+			/if (!${Me.Pet.ID}) {
+				/casting "Pendril's Animation"
+				/delay 3s
+			}
+			/target id ${Me.Pet.ID}
+			
+			/if (${Me.Skill[Conjuration]} < ${Me.SkillCap[Conjuration]}) {
+				/casting "Mesmerize"
+			} else /if (${Me.Skill[Alteration]} < ${Me.SkillCap[Alteration]}) {
+				/casting "Weaken"
+			} else /if (${Me.Skill[Evocation]} < ${Me.SkillCap[Evocation]}) {
+				/casting "Chaotic Feedback"
+			} else /if (${Me.Skill[Divination]} < ${Me.SkillCap[Divination]}) {
+				/casting "True North"
+			} else /if (${Me.Skill[Abjuration]} < ${Me.SkillCap[Abjuration]}) {
+				/casting "Tashina"
+			} else {
+				/end
+			}
+			
+		} else /if (${Me.Class.Name.Equal[Bard]}) {
+			
+			/target myself
+			
+			/if (${Me.Skill[Wind Instruments]} < ${Me.SkillCap[Wind Instruments]}) {
+				/if (!${Me.Casting.Name.Equal[Cinda's Charismatic Carillon]}) {
+					/casting "Cinda's Charismatic Carillon"
+				}
+			} else /if (${Me.Skill[Singing]} < ${Me.SkillCap[Singing]}) {
+				/if (!${Me.Casting.Name.Equal[Lyssa's Locating Lyric]}) {
+					/casting "Lyssa's Locating Lyric"
+				}
+			} else /if (${Me.Skill[Brass Instruments]} < ${Me.SkillCap[Brass Instruments]}) {
+				/if (!${Me.Casting.Name.Equal[Denon's Disruptive Discord]}) {
+					/casting "Denon's Disruptive Discord"
+				}
+			} else /if (${Me.Skill[Stringed Instruments]} < ${Me.SkillCap[Stringed Instruments]}) {
+				/if (!${Me.Casting.Name.Equal[Hymn of Restoration]}) {
+					/casting "Hymn of Restoration"
+				}
+			} else /if (${Me.Skill[Percussion Instruments]} < ${Me.SkillCap[Percussion Instruments]}) {
+				/if (!${Me.Casting.Name.Equal[Chant of Battle]}) {
+					/casting "Chant of Battle"
+				}
+			} else {
+				/stopcast
+				/end
+			}
+			
+		}
+		/delay 4s
+		|:PCCheck
+		|/if (${SpawnCount[pc]}>4) {
+		|	/delay 5s
+		|	/goto :PCCheck
+		|}
+    /goto :Loop
+/return

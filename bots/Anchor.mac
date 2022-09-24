@@ -1,0 +1,13 @@
+#warning
+
+#include Anchor.inc
+
+sub main
+	/call SetupAnchorVars
+	/call setupLoot
+	
+	:killLoop
+		/call KillPulse
+		/delay 1
+	/goto :killLoop
+/return

@@ -1,0 +1,18 @@
+#warning
+
+#include Notify.inc
+
+sub main
+	/declare mobCount int outer 1
+	/call SetupNotifyVars
+	|/call setupAnchor
+	|/call setupLoot
+	
+	/call ArrayAdder "Lord Inquisitor Seru"
+	
+	/echo ---------Notify Seru----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

@@ -1,0 +1,31 @@
+#warning
+
+#include Notify.inc
+
+sub main
+	/declare mobCount int outer 10
+	/declare killRange int outer 400
+	
+	/echo ---------Notify Custom----------
+	
+	/call SetupNotifyVars
+	/varset endOnTargetKill FALSE
+	|/varset doText TRUE
+	
+	/call setupAnchor
+	|/varset doAnchor FALSE
+	|/varset ignorePC TRUE
+	/varset ignorePcRange 1000
+	|/varset ignorePcByLOS TRUE
+	
+	/call setupLoot
+	/call OverrideManualLoot Keep
+	
+	/call ArrayAdder "Gorul Longshanks" TRUE
+	
+	|/call IgnoreArrayAdder "Guard"
+
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

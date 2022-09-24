@@ -1,0 +1,121 @@
+|
+| Ach.Mac - Walks the achievments window and dumps out all the details to ACH_{NAME}.INI 
+| 
+| Original Author : Dewey2461
+|
+| Last know to work 3-13-2014 
+|
+| WARNING: This can take 5/10/20 seconds to run. 
+|
+| Output: 
+|
+|[Alaran in Chains (Shard's Landing) (10 Points)]
+|1=FALSE|Rusty Shackles|0 / 1
+|2=FALSE|Frayed Whip|0 / 1
+|3=FALSE|Forge Hammer|0 / 1
+|[Fear in Pieces (Shard's Landing) (10 Points)]
+|1=FALSE|Unbreakable Sliver|0 / 1
+|2=FALSE|Tempting Heart|0 / 1
+|3=FALSE|Red Shard|0 / 1
+|
+
+#warning
+
+Sub main
+   /declare ININame string outer ACH_${Me.Name}.ini
+   /declare line int outer 0 
+   /declare NODE string 
+   /declare AchName string outer
+   /declare AchDone string outer
+   /declare SubDone string outer
+   /declare SubName string outer
+   /declare SubCount string outer
+   /declare SubKey int outer 0
+   
+   /echo Dumping your open achievements to: ${ININame}
+   
+   /if (!${Window[AchievementsWnd].Open}) {
+      /ach
+      /sleep 2s
+      /echo -- Select some achievements to and restart macro.
+   }
+
+   | THIS DUMPS THE WINDOW INFO TO LOG -- DEBUGGING
+   |/call LogWindow Window[AchievementsWnd] "" 1 
+   
+   /call ParseWindow Window[AchievementsWnd]
+/return
+
+
+| Recursive function that walks the achievements window and spits out achievements.
+| Working as of 3-13-2014
+Sub ParseWindow(string NODE)
+   /varcalc line ${line} + 1
+
+   /if (${${NODE}.Name.Equal[ACH_AchievementSub_CountLabel]}) {
+      /varset SubCount ${${NODE}.Text} 
+      /if (${SubName.NotEqual[NULL]}) {
+         
+         /if (${SubDone.Equal[TRUE]})  /echo .    DONE ${SubName} ${SubCount}
+         /if (${SubDone.Equal[FALSE]}) /echo .    --->     ${SubName} ${SubCount}
+         
+         /varcalc SubKey ${SubKey}+1
+         /ini ${ININame} "${AchName}" ${SubKey} "${SubDone}|${SubName}|${SubCount}"
+         /varset SubName NULL
+         
+      }
+   }
+   
+   /if (${${NODE}.Open}) {
+      /if (${${NODE}.Name.Equal[ACH_Item_Screen]}) /varset AchName ${${NODE}.Text}
+      /if (${${NODE}.Name.Equal[ACH_AchievementTimeStamp_Label]}) {
+         /varset AchDone ${${NODE}.Text}
+         /echo [A] ${AchName} ${AchDone}
+         /varset SubName NULL
+         /varset SubKey  0
+      }
+      /if (${${NODE}.Name.Equal[ACH_AchievementSub_CompletedButton]}) /varset SubDone ${${NODE}.Checked} 
+      /if (${${NODE}.Name.Equal[ACH_AchievementSub_Label]})          /varset SubName ${${NODE}.Text}
+      }
+   }
+      
+   /if (${line} > 5000) {
+      /echo halting due to line limit.
+      /return
+   }
+      
+   /if (${${NODE}.Open} && ${${NODE}.Children}) {
+      /call ParseWindow "${NODE}.FirstChild"
+   }      
+
+   /if (${${NODE}.Siblings}) {
+      /call ParseWindow "${NODE}.Next"
+   }
+/return
+
+Sub LogWindow(string NODE,string lv,int sib)
+      /declare a string local
+      /declare b string local 
+
+      /varcalc line ${line} + 1
+      /varcalc a ${lv} + 1
+      /varcalc b ${sib} + 1
+
+      /if (${line}==1) /mqlog ~ LINE ~ LEVEL ~ OPEN ~ ENABLED ~ CHECKED ~ TEXT ~ NAME ~ TYPE
+      
+      /echo ${line} ${lv}${sib} ${${NODE}.Enabled} ${${NODE}.Text}                        ${${NODE}.Name}
+      /mqlog ~ ${line} ~ ${lv}${sib} ~ ${${NODE}.Open} ~ ${${NODE}.Enabled} ~ ${${NODE}.Checked} ~ ${${NODE}.Text} ~ ${${NODE}.Name} ~ ${${NODE}.Type}   
+
+      /if (${line} >= 250) {
+         /echo halting at level 250
+         /return
+      }
+      
+      /if (${${NODE}.Children}) {
+         /call LogWindow "${NODE}.FirstChild" "${lv}${sib}." 1
+      }      
+
+      /if (${${NODE}.Siblings}) {
+         /call LogWindow "${NODE}.Next" ${lv} ${b}
+      }
+/return

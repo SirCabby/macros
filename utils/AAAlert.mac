@@ -1,0 +1,8 @@
+#warning
+
+Sub Main
+	:Loop
+		/if (${Me.AAPoints} > 20) /beep
+		/delay 1m
+		/goto :Loop
+/return

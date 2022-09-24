@@ -1,0 +1,337 @@
+#warning
+
+| Max number of mobs to keep track of
+#define MobCount 30
+
+#define SingleMezSpellName "Baffle"
+#define TashSpellName "Clamor of Tashan"
+#define AEMezSpellName "Serene Wave"
+|#define SingleMezSpellName "Lullaby of the Lost"
+|#define AEMezSpellName "Wave of Slumber Rk. II"
+
+|unused
+|#event MezBreak "#1# has been awakened by#*#"
+|#event MezWornOff "Your SingleMezSpellName spell has worn off of #1#."
+
+|used
+#event Interrupt "Your spell is interrupted."
+#event CantMez "Your target cannot be mesmerized#*#"
+#event ResistMez "Your target resisted the SingleMezSpellName spell."
+
+Sub Main
+	/echo Mez script
+	
+	| Every mob identified while in combat is stored in watchedMobs by id.  A timer of same index will determine if mob is mezzed or not
+	/declare watchedMobs[MobCount] int outer
+	| How long does your mez last for?
+	/declare mezDuration int outer
+	| What is the range for your mez spell?
+	/declare mezRadius int outer
+	| What is the radius around your AE mez?
+	/declare AEMezRadius int outer
+	| TRUE = radius around target, FALSE = radius around you
+	/declare AEMezTypeOnTarget bool outer
+	/if (${Me.Class.ShortName.Equal[ENC]}) {
+		/varset mezDuration 800
+		/varset mezRadius 200
+		/varset AEMezRadius 30
+		/varset AEMezTypeOnTarget TRUE
+	} else /if (${Me.Class.ShortName.Equal[BRD]}) {
+		/varset mezDuration 180
+		/varset mezRadius 200
+		/varset AEMezRadius 35
+		/varset AEMezTypeOnTarget FALSE
+	} else {
+		/echo Your class can't mez...
+		/end
+	}
+	| Used to break a loop after casting a mez to re-evaluate what to do next (Casting time adds seconds, lists could be stale)
+	/declare MezCastedForThisMob bool outer
+	| Temp storage to do one time lookup of this info
+	/declare thisMobAnimation int outer
+	| When set to TRUE (and no more watchedMobs to keep locked down), this will delete vars used for watchedMobs and timers	
+	/declare dirtyVars bool outer FALSE
+	| Do we need to be watching for mezzes?
+	/declare watchedMobsInRange bool outer FALSE
+	| return bool for Interrupt event
+	/declare wasInterrupted bool outer FALSE
+	| Used for outer loops
+	/declare m_i int outer
+	| Used for inner loops
+	/declare m_j int outer
+	
+	:Loop
+		| Make sure all XTargets are set.  First slot is group assist, the rest are Auto Hater
+		/if (${Me.XTarget[1].TargetType.NotEqual[Group Assist Target]}) /xtarget set 1 groupassisttarget
+		/for m_i 2 to MobCount
+			/if (${Bool[${Me.XTarget[${m_i}].TargetType}]}) {
+				/if (${Me.XTarget[${m_i}].TargetType.NotEqual[Auto Hater]}) /xtarget set ${m_i} autohater
+				/next m_i
+			}
+		
+		| Do we need to keep eye out for mez targets?  watchedMobsInRange is result bool
+		/call AreWatchedMobsClose
+		
+		/if (${watchedMobsInRange}) {
+			/varset dirtyVars TRUE
+			| Update watched mobs list and timers
+			/call AddLooseAggroToWatchedMobs
+			| Handle mezzing
+			/call MezLooseTargetsThenRefreshStaleMezzes
+		} else /if (${dirtyVars}) {
+			| Delete vars for watchedMobs and timers
+			/call ResetWatchedMobs
+			/varset dirtyVars FALSE
+		} | Else no action needed
+	/goto :Loop
+/return
+
+| This is responsible for updating the watchedMobs list along with their associated timers
+Sub AddLooseAggroToWatchedMobs
+	| Add mobs in XTarget Auto Haters (start from 2 since 1 is group assist which we ignore)
+	/for m_i 2 to MobCount
+		| Here we check to make sure we haven't exceeded our max XTarget count, and double check that it's set to Auto Hater
+		/if (${Bool[${Me.XTarget[${m_i}].TargetType}]} && ${Me.XTarget[${m_i}].TargetType.Equal[Auto Hater]}) {
+			/call AddOrUpdateWatchedMob ${Me.XTarget[${m_i}].ID}
+			/next m_i
+		}
+	
+	| If XTarget is maxed out, let's add proximity npc's to watched mob list (not as accurate, but useful for chanters who can lock down more than 10 mobs)
+	| Here we are setting the i index back to the last index of our previous Auto Hater loop (the last slot).
+	/varcalc m_i ${m_i}-1
+	| Let's see if the last slot was filled.  If so, we might have overflowed the XTarget capacity for aggroed mobs.
+	/if (${Me.XTarget[${m_i}].ID}) {
+		/for m_i 1 to ${SpawnCount[npc radius 100 los]}
+			/call AddorUpdateWatchedMob ${NearestSpawn[${m_i}, npc radius 100].ID}
+		/next m_i
+	}
+/return
+
+| Passive animations?:
+| 25 = tread_water
+| 26 = stand_animated2
+| 32 = stand2
+| 71 = stand1
+| 72 = stand_animated1
+| 110 = stand3
+| 111 = stand_animated3
+| 127 = tread_water2
+
+| This gets called one mob ID at a time from AddLooseAggroToWatchedMobs
+Sub AddOrUpdateWatchedMob(thisMobId)
+	| Was this method called with a valid ID, is this ID not the same as our Group Assist Target, and is it still alive?
+	/if (${thisMobId} > 0 && ${thisMobId} != ${Me.XTarget[1].ID} && !${Spawn[${thisMobId}].Dead}) {
+		| Iterate each index of watchedMobs. This loop is responsible for seeing if this mob was already in the list, and if so, has it broken mez early?
+		/for m_j 1 to MobCount
+			| Is this watchedMob the same as the mob we're checking on?
+			/if (${watchedMobs[${m_j}]} == ${thisMobId}) {
+				/varset thisMobAnimation ${Spawn[${thisMobId}].Animation}
+				| We found the mob in our list already. If we think this mob still has time left on mez, but is not in a passive animation, set timer to 0 so mez sub knows to recast now.
+				/if (${timer${m_j}} > 0 && ${thisMobAnimation} != 25 && ${thisMobAnimation} != 26 && ${thisMobAnimation} != 32 && ${thisMobAnimation} != 71 && ${thisMobAnimation} != 72 && ${thisMobAnimation} != 110 && ${thisMobAnimation} != 111 && ${thisMobAnimation} != 127) {
+					/echo ${Spawn[${thisMobId}].Name} broke early - animation : ${thisMobAnimation}
+					/varset timer${m_j} 0
+				}
+				| Exit now, no need to continue on.
+				/return
+			} else {
+				| watchedMob was not thisMob, continue onto next watchedMob.
+				/next m_j
+			}
+		
+		| At this point, we know our mob is new and was not already in our watchedMobs list.
+		| Iterate each index of watchedMobs. This loop is responsible for finding an empty slot in watchedMobs to add our new mob to.
+		/for m_j 1 to MobCount
+			| Is this slot available? If so, add to this index and create a timer for it.
+			/if (!${Bool[${watchedMobs[${m_j}]}]}) {
+				/echo Watching ${Spawn[${thisMobId}].Name}
+				/varset watchedMobs[${m_j}] ${thisMobId}
+				/if (!${Defined[timer${m_j}]}) {
+					/declare timer${m_j} timer outer
+				}
+				| New mobs need immediate attention, so set timer to 0.
+				/varset timer${m_j} 0
+			} else {
+				| This slot was taken, continue to next slot.
+				/next m_j
+			}
+	}
+/return
+
+| This sub is responsible for handling mezzing based on the updated watchedMobs / timers we just set in the sub AddLooseAggroToWatchedMobs
+Sub MezLooseTargetsThenRefreshStaleMezzes
+	| This loop is to identify good situations to cast an AE
+	| Iterate through each mob in watchedMobs
+	/for m_i 1 to MobCount
+		| If this gets set to TRUE, we'll /return out so we can re-evaluate our lists / timers. Mez casts take precious seconds and things might have changed.
+		/varset MezCastedForThisMob FALSE
+		| Does this watchedMob index have a value?
+		/if (${Bool[${watchedMobs[${m_i}]}]}) {
+			| If a spawn can be found with this ID, and it's not dead, and it's not our group assist target
+			/if (${Spawn[${watchedMobs[${m_i}]}].ID} && !${Spawn[${watchedMobs[${m_i}]}].Dead} && ${watchedMobs[${m_i}]} != ${Me.XTarget[1].ID}) {
+				| If this mob has only 2 ticks left on the timer AND...
+				  | Our AE mez radiates from target (chanter type), and the mob distance is within our mez casting range, and we have line of sight, OR...
+				  | Our AE mez radiates from ourself (bard type), and the mob distance is within our AEMezRadius (since casting range is 0 for our spell radiating from ourselves)
+				/if (${timer${m_i}} < 120 && ((${AEMezTypeOnTarget} && ${Spawn[${watchedMobs[${m_i}]}].Distance} < ${mezRadius} && ${Spawn[${watchedMobs[${m_i}]}].LineOfSight}) || (!${AEMezTypeOnTarget} && ${Spawn[${watchedMobs[${m_i}]}].Distance} < ${AEMezRadius}))) {
+					| Loop through watchedMobs again to see if another mob is within the AE blast radius of this mob, and needs mezzed
+					/for m_j 1 to MobCount
+						| Make sure we don't compare the mob to itself, and that we have a value for this index of our array
+						/if (${m_i} != ${m_j} && ${Bool[${watchedMobs[${m_j}]}]}) {
+							| If the mob has only 2 ticks left on the timer, and it's not dead, and it's not our group assist target AND...
+							  | Our AE mez radiates from target (chanter type), and the second mob is within AEMezRadius of the first mob, OR...
+							  | Our AE mez radiates from ourself (bard type), and the second mob is also within our AEMezRadius (since casting range is 0 for our spell radiating from ourselves)
+							/if (${timer${m_j}} < 120 && !${Spawn[${watchedMobs[${m_j}]}].Dead} && ${watchedMobs[${m_j}]} != ${Me.XTarget[1].ID} && ((${AEMezTypeOnTarget} && ${Spawn[id ${watchedMobs[${m_j}]} radius ${AEMezRadius} loc ${Spawn[${watchedMobs[${m_i}]}].X} ${Spawn[${watchedMobs[${m_i}]}].Y}].ID}) || (!${AEMezTypeOnTarget} && ${Spawn[id ${watchedMobs[${m_j}]} radius ${AEMezRadius} loc ${Me.X} ${Me.Y}].ID}))) {
+								| If we haven't yet casted our AE within this Sub call
+								/if (!${MezCastedForThisMob}) {
+									| If AE isn't ready, skip the evaluation and continue to single target mezzes
+									/if (!${Me.SpellReady[AEMezSpellName]}) {
+										/goto :SkipAE
+									}
+									/target id ${watchedMobs[${m_i}]}
+									/echo AEMezzing : ${Spawn[${watchedMobs[${m_i}]}].Name}
+									/doevents flush
+									/if (${Me.Class.ShortName.Equal[BRD]}) {
+										| Use EQ's built in /cast here because it's more reliable for bards
+										/cast ${Me.Gem[AEMezSpellName]}
+									} else {
+										/casting "AEMezSpellName"
+									}
+									/delay 1s
+									| Wait until casting is done, then immediately stopcast (for bards)
+									/delay 5s ${Cast.Status.NotEqual[C]}
+									/stopcast
+									/doevents Interrupt
+									| If was not interrupted, set timer to the mez duration for the focused watchedMob
+									/if (!${wasInterrupted}) {
+										/varset timer${m_i} ${mezDuration}
+									} else {
+										| Interrupted. We'll re-evaluate lists and try again on next loop
+										/return
+									}
+									| We can't evaluate target unmezzable messages here because we don't know which, so we'll ignore them and let our list mapper find loose targets instead.
+									| We will not attempt to cast any more spells during this sub because after a few seconds we need to re-evaluate our lists.
+									/varset MezCastedForThisMob TRUE
+								}
+								| Set the timer to mez duration for any mobs caught in blast radius of the AE
+								/varset timer${m_j} ${mezDuration}
+							}
+						}
+					| We want to keep looping here, because we need to set timers for all mobs caught within the blast radius of the AE
+					/next m_j
+				}
+			} else { | No longer a valid mob, reset the values
+				/varset watchedMobs[${m_i}] 0
+				/varset timer${m_i} 0
+			}
+		}
+		| Since we casted a spell, we will re-evaluate the watchedMobs array and perhaps cast something else on the next loop
+		/if (${MezCastedForThisMob}) /return
+	/next m_i
+	:SkipAE
+	
+	| Single target mezzes. First i loop to mez loose targets (timer at 0, high priority), second i loop to refresh targets about to wear off (less than 2 ticks remaining, just to refresh before it wears off)
+	/for m_i 1 to 2
+		| Iterate through our watchedMobs array
+		/for m_j 1 to MobCount
+			| If this gets set to TRUE, we'll /return out so we can re-evaluate our lists / timers. Mez casts take precious seconds and things might have changed.
+			/varset MezCastedForThisMob FALSE
+			| Does this watchedMob index have a value?
+			/if (${Bool[${watchedMobs[${m_j}]}]}) {
+				| If a spawn can be found with this ID, and it's not dead
+				/if (${Spawn[${watchedMobs[${m_j}]}].ID} && !${Spawn[${watchedMobs[${m_j}]}].Dead}) {
+					| If this is the first loop and the timer is 0 OR...
+					| If this is the second loop and the timer has less than 2 ticks remaining, AND...
+					  | This mob is within our mez radius, and we have los
+					/if (((${m_i} == 1 && ${timer${m_j}} == 0) || (${m_i} == 2 && ${timer${m_j}} <= 120)) && ${Spawn[${watchedMobs[${m_j}]}].Distance} < ${mezRadius} && ${Spawn[${watchedMobs[${m_j}]}].LineOfSight}) {
+						| Enchs have to wait for the spell to be ready, bards have immediate refresh
+						/if (${Me.Class.ShortName.Equal[ENC]}) {
+							/delay 6s ${Me.SpellReady[SingleMezSpellName]}
+						}
+						/target id ${watchedMobs[${m_j}]}
+						/echo Mezzing : ${Spawn[${watchedMobs[${m_j}]}].Name}
+						/doevents flush
+						/if (${Me.Class.ShortName.Equal[BRD]}) {
+							| Use EQ's built in /cast here because it's more reliable for bards
+							/cast ${Me.Gem[SingleMezSpellName]}
+						} else {
+							/casting "SingleMezSpellName"
+						}
+						/delay 1s
+						| Wait until casting is done, then immediately stopcast (for bards)
+						/delay 5s ${Cast.Status.NotEqual[C]}
+						/stopcast
+						/doevents Interrupt
+						| If was not interrupted, set timer to the mez duration for the focused watchedMob
+						/if (!${wasInterrupted}) {
+							/varset timer${m_j} ${mezDuration}
+						} else {
+							| Interrupted. We'll re-evaluate lists and try again on next loop
+							/return
+						}
+						| Was our target unmezzable?
+						/doevents CantMez
+						|/if (${timer${m_j}} > 0) /doevents ResistMez | Commented out for now, untested
+						| We will not attempt to cast any more spells during this sub because after a few seconds we need to re-evaluate our lists.
+						/varset MezCastedForThisMob TRUE
+					}
+				} else { | No longer a valid mob, reset the values
+					/varset watchedMobs[${m_j}] 0
+					/varset timer${m_j} 0
+				}
+			}
+			| Since we casted a spell, we will re-evaluate the watchedMobs array and perhaps cast something else on the next loop
+			/if (${MezCastedForThisMob}) /return
+		/next m_j
+	/next m_i
+/return
+
+Sub Event_Interrupt
+	/varset wasInterrupted TRUE
+/return
+
+Sub Event_CantMez
+	/echo ${Spawn[${watchedMobs[${m_j}]}].Name} cannot be mezzed. Ignoring...
+	| Setting timer to -1 will make us ignore this target for future mezzing
+	/varset timer${m_j} -1
+/return
+
+| This is all untested and commented out
+Sub Event_ResistMez
+	/echo ${Spawn[${watchedMobs[${m_j}]}].Name} resisted mez. Tashing...
+	/casting TashSpellName
+	/delay 1s
+	/delay 3s !${Me.Casting.ID}
+	/varset timer${m_j} 0
+/return
+
+| This is responsible for letting us know to keep eye out for loose targets
+| Sometimes mez can wipe our XTarget window, but that doesn't mean we won't catch aggro when it wears off, so check our lists to be sure!
+Sub AreWatchedMobsClose
+	| If first Auto Hater has a target, we know we're still in trouble, so return immediately
+	/if (${Me.XTarget[2].ID}) {
+		/varset watchedMobsInRange TRUE
+		/return
+	}
+	| Check our watchedMobs list and see if any of them are still alive and within radius (if not within radius, we should not catch aggro when they wake up)
+	/for m_i 1 to MobCount
+		/if (${Bool[${watchedMobs[${m_i}]}]} && ${Spawn[${watchedMobs[${m_i}]}].ID} && !${Spawn[${watchedMobs[${m_i}]}].Dead} && ${Spawn[${watchedMobs[${m_i}]}].Distance} < ${mezRadius}) {
+			| We'll need to update our lists and possibly mez
+			/varset watchedMobsInRange TRUE
+			/return
+		}
+	/next m_i
+	| We're safe, no threat detected.
+	/varset watchedMobsInRange FALSE
+/return
+
+| Just used to clean up unused vars / timers during down time
+Sub ResetWatchedMobs
+	/echo resetting list
+	/for m_i 1 to MobCount
+		/if (${Defined[watchedMobs[${m_i}]]}) {
+			/deletevar watchedMobs[${m_i}]
+		}
+		/if (${Defined[timer${m_i}]}) {
+			/deletevar timer${m_i}
+		}
+	/next m_i
+/return

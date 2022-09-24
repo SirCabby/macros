@@ -1,0 +1,10 @@
+#warning
+
+sub main
+	/echo ---------CoP----------
+	
+	/if (!${Bool[${Me.Song[Circle of Power I Effect]}]} && !${Bool[${Me.Song[Circle of Power II Effect]}]} && !${Bool[${Me.Song[Circle of Power III Effect]}]}) {
+		/casting "Rage of Rolfron"
+	}
+/return
+

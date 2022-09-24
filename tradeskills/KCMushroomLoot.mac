@@ -1,0 +1,118 @@
+#warning
+
+#include common/packs.inc 
+
+#event gottell "#1# tells you#*#" 
+#event full "#*#no place to put#*#" 
+
+Sub main 
+   /echo Let's farm some Shrooms!
+   /declare LookAngle int outer 0
+   /declare retryCounter int outer 0
+   :loop 
+	   /doevents 
+	   /if (${SpawnCount[pc radius 150 loc -140 640]}>1 || ${Spawn[gm].ID}) /call Dummy
+	   /squelch /itemtarget
+	   /delay 1s 
+	   /if (${ItemTarget.Name.Find[Mushroom]}) { 
+		  :inner
+		  /call GotoItem
+		  /call GetItem
+		  /call closepacks
+		  /Delay 2s
+	   } else {
+		  /if (${ItemTarget.Name.NotEqual[Brew Barrel]}) {
+			  /echo Unusual Item found: ${ItemTarget.Name}
+			  /goto :inner
+		  }
+		  /Delay 5s
+	   }
+   /goto :loop 
+/return 
+
+   Sub GotoItem 
+      :loop 
+         /if (${ItemTarget.Distance}>2) { 
+            /squelch /face item
+            /keypress forward hold
+	    /delay 1
+            /keypress forward
+            /goto :loop 
+            } 
+      /return 
+
+Sub GetItem 
+   :loop
+   /if (${retryCounter}>2) {
+	/varset retryCounter 0
+	/varset LookAngle 0
+	/return
+   }
+   /if (${LookAngle}!=0) {
+        /look ${LookAngle} 
+   } else {
+   	/squelch /face item
+   }
+   /if (!${Cursor.ID}) /click left center 
+   /if (${Target.ID}) { 
+	 /squelch /face item
+         /click left center
+         /if (${Target.ID}) {
+		/echo Targeted a rat, killing it
+		/stick loose 5
+		/attack on
+		/delay 4s
+		/hidecorpses all
+		/target clear 
+		/goto :loop
+         }
+   } 
+   /if (${Cursor.ID}) {
+	/call pocket
+   } else {
+	/if (${LookAngle}<0) {
+	    /varcalc LookAngle ${Me.Look}+2 
+	    /Delay 5
+	    /goto :loop
+	} else {
+	    /varcalc retryCounter ${retryCounter}+1
+	    /squelch /face item
+	    /varset LookAngle -128
+	    /goto :loop
+	}
+   }
+   /varset LookAngle 0
+   /return
+
+Sub Event_gottell(line,sender) 
+   /call Dummy 
+/return 
+
+Sub pocket
+    :inv
+    /if (${Cursor.ID}) {
+        /echo Looted Mushroom
+		/autoinv
+		/Delay 2s
+		/goto :inv
+	} else {
+		/varset LookAngle 0
+		/return
+	}
+/return
+
+Sub Event_full 
+   /echo Your Bags are FULL
+   /afk
+   /endmacro 
+/return 
+
+Sub Dummy 
+   /echo Someone is Around the Area or You are Getting Tells
+   /beep
+   /beep
+   /beep
+   :dummywait 
+      /delay 10s 
+      /if (${SpawnCount[pc radius 150 loc -140 640]}>1 || ${Spawn[gm].ID}) /goto :dummywait
+/return

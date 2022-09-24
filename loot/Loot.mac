@@ -1,0 +1,24 @@
+#warning
+
+#include Ninjadvloot.inc
+
+#define CenterViewButton Home
+
+Sub main
+	/call SetupAdvLootVars
+	
+	/if (${Group} && !${Group.MasterLooter.ID}) {
+		/grouproles set ${Me.Name} 5
+		/delay 5s ${Group.MasterLooter.ID}==${Me.ID}
+	}
+	
+	/if (${Me.UseAdvancedLooting}) {
+		/call UseAdvLoot
+	} else {
+		/call LootMobs
+		| Return field of view
+		/keypress CenterViewButton
+	}
+	
+	/call ReportLootedValue
+/return

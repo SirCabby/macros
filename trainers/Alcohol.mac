@@ -1,0 +1,48 @@
+#warning
+#turbo
+
+#define Booze "Short Beer"
+
+#event SkillUped "#*#You have become better at Alcohol Tolerance! (#1#)#*#"
+
+Sub Main
+    /echo Let's Drink!!
+    /declare counter int outer 0
+    /declare skillup int outer 0
+	
+    :DrinkLoop
+		/delay 2s
+		/doevents
+		
+		/if (${Me.Drunk} < 200) {
+			/if (${FindItemCount[=Booze]} > 0) {
+				/useitem ${FindItem[=Booze].ItemSlot} ${FindItem[=Booze].ItemSlot2}
+				/varcalc counter ${counter}+1
+			} else {
+				/echo Out of beer... :(
+				/call wrapup
+			}
+		}
+    /goto :DrinkLoop
+/return
+
+Sub Event_SkillUped(filter, value)
+    /varcalc skillup ${skillup}+1
+	/if (${Me.Skill[Alcohol Tolerance]} >= ${Skill[Alcohol Tolerance].SkillCap}) {
+		/echo Maxed Alcohol Tolerance!
+		/call wrapup
+	}
+/return
+
+Sub wrapup
+	/declare Minutes int inner 0
+	/declare Seconds int inner 0
+	/varcalc Minutes ${Math.Calc[${Macro.RunTime}/60]}
+	/varcalc Seconds ${Math.Calc[${Macro.RunTime}%60]}
+	
+    /echo Total drinks used: ${counter}
+    /echo Total runtime: ${Minutes} Minutes, ${Seconds} Seconds
+    /echo Total skill ups: ${skillup}
+	/echo Current Alcohol Tolerance: ${Me.Skill[Alcohol Tolerance]} / ${Skill[Alcohol Tolerance].SkillCap}
+	/end
+/return

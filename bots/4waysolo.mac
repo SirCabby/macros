@@ -1,0 +1,483 @@
+#warning
+
+#define ApprovalCount 10
+
+| Zone respawn is 15m
+
+sub main
+	/declare killRange int outer 100
+	/declare moveBack bool outer FALSE
+	/declare xloc int outer 0
+	/declare yloc int outer 0
+	/declare RespawnTimer timer outer 18m
+	/declare mobCount int outer 0
+	/declare CheckShzalk bool outer FALSE
+	/declare moveTimer timer outer 1m
+	/declare zoneName string outer ${Zone.Name}
+	/declare player int outer 1
+	/declare approvedPlayer int outer 1
+	/declare unexpectedPC bool outer FALSE
+	/declare ApprovedPCArray[ApprovalCount] string outer
+	/declare pcCheckRadius int outer 4000
+	
+	/if (${Bool[${Group.GroupSize}]}) {
+		/for approvedPlayer 1 to ${Group.GroupSize}
+			/varset ApprovedPCArray[${approvedPlayer}] ${Group.Member[${Math.Calc[${approvedPlayer}-1]}].Name}
+		/next approvedPlayer
+	}
+	| To add special permissions, modify line below
+	| /varset ApprovedPCArray[${Math.Calc[${Group.GroupSize}+1]}] name
+	
+	/echo ---------4way----------
+	
+	:pathLoop
+		| /call AAPicker
+		
+		| Start at center and kill 2
+		/varset killRange 75
+		/varset xloc 867
+		/varset yloc 2495
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Heading South: ${RespawnTimer.Value}
+		/varset killRange 120
+		/call BuffAndInvis
+		/varset xloc 652
+		/varset yloc 2495
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Back to Center from South: ${RespawnTimer.Value}
+		/varset killRange 75
+		/call BuffAndInvis
+		/squelch /moveto loc 715.00 2495.00
+		/call ManualWaitTilThere
+		/varset xloc 867
+		/varset yloc 2495
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Heading Far West: ${RespawnTimer.Value}
+		/varset killRange 240
+		/call BuffAndInvis
+		/varset xloc 867
+		/varset yloc 3050
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Heading Mid West: ${RespawnTimer.Value}
+		/varset killRange 210
+		/varset xloc 867
+		/varset yloc 2885
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Back to Center from West: ${RespawnTimer.Value}
+		/varset killRange 75
+		/call BuffAndInvis
+		/squelch /moveto loc 866.00 2755.00
+		/call ManualWaitTilThere
+		/varset xloc 867
+		/varset yloc 2495
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Heading North (2 points): ${RespawnTimer.Value}
+		/varset killRange 50
+		/call BuffAndInvis 
+		/varset xloc 1000
+		/varset yloc 2498
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/if (${RespawnTimer.Value} > 0) {
+			/target npc los radius 5 loc 2570 1084
+			/disc Echo of Prevarication Rk. III
+			/squelch /target clear
+		}
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		/varset xloc 1067
+		/varset yloc 2584
+		/squelch /moveto loc ${xloc} ${yloc}
+		/varset killRange 60
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		/varset CheckShzalk TRUE
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		/varset CheckShzalk FALSE
+		/varset killRange 120
+		/varset xloc 1106
+		/varset yloc 2482
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Back to Center from North: ${RespawnTimer.Value}
+		/varset killRange 75
+		/call BuffAndInvis
+		/squelch /moveto loc 1029.00 2493.00
+		/call ManualWaitTilThere
+		/varset xloc 867
+		/varset yloc 2495
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Heading East: ${RespawnTimer.Value}
+		/varset killRange 150
+		/call BuffAndInvis
+		/varset xloc 873
+		/varset yloc 2297
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Heading East2: ${RespawnTimer.Value}
+		/varset killRange 120
+		/call BuffAndInvis
+		/squelch /moveto loc 845.00 2213.00
+		/call ManualWaitTilThere
+		/varset xloc 674
+		/varset yloc 2043
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		
+		/echo Back to Center from East2: ${RespawnTimer.Value}
+		/varset killRange 110
+		/call BuffAndInvis
+		/squelch /moveto loc 845.00 2213.00
+		/call ManualWaitTilThere
+		/squelch /moveto loc 873.00 2297.00
+		/call ManualWaitTilThere
+		/varset xloc 867
+		/varset yloc 2495
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		/call WaitTilDead
+		/call ManualWaitTilThere
+		/squelch /moveto loc ${xloc} ${yloc}
+		/call ManualWaitTilThere
+		
+		/echo Time Left: ${RespawnTimer.Value}
+		
+		/if (${Spell[Certitude Rk. II].Stacks} && !${Me.Buff[Certitude Rk. II].ID}) /stance Reactive
+		
+		:timerWait
+			/delay 1s
+			/if (!${Me.Feigning}) /doability "Feign Death"
+			/if (${RespawnTimer.Value} > 0) /goto :timerWait
+		
+		/stance Passive
+		
+		/varset RespawnTimer 18m
+		/stand
+	/goto :pathLoop
+/return
+
+sub WaitTilDead
+	:killLoop
+		/if (${Me.Dead} || ${Zone.Name.NotEqual[${zoneName}]}) {
+			/echo I died... ${Time.Time24}
+			/mqlog I died... ${Time.Time24}
+			/exit
+		}
+		/call PcCheck
+		/if (${Me.Feigning}) {
+			/for mobCount 1 to ${SpawnCount[npc radius ${killRange}]}
+				/if (${NearestSpawn[${mobCount}, npc].Moving}) {
+					/delay 1s
+					/goto :killLoop
+				}
+			/next mobCount
+			/if (${Me.PctHPs} > 50) {
+				/if (${Target.Distance} > 50) /squelch /target clear
+				/stand
+			}
+		} else /if (!${Me.CombatState.Equal[COMBAT]}) {
+			/if (${moveBack} && !${Stick.Active}) {
+				/squelch /moveto loc ${xloc} ${yloc}
+				/varset moveBack FALSE
+				/hidecorpses all
+			} else /if (!${Me.Moving} && !${MoveTo.Moving}) {
+				/squelch /target clear
+				/if (!${Bool[${RespawnTimer.Value}]}) {
+					/echo Out of Time, returning
+					/if (!${Me.Invis}) {
+						/doability "Feign Death"
+						:idLoop
+							/delay 2s
+							/if (!${Me.AltAbilityReady[Imitate Death]}) /goto :idLoop
+						/alt act 420
+					}
+					/return
+				}
+				/if (!${NearestSpawn[npc radius 75].ID}) /call HasteCheck
+				/if (${CheckShzalk} && ${NearestSpawn[npc Shzalk].ID} && !${NearestSpawn[npc Shzalk].Dead}) {
+					/echo Shzalk Time ${RespawnTimer.Value}
+					/doability "Feign Death"
+					:healLoop
+						/if (${Me.AbilityReady[Mend]} && ${Me.PctHPs} < 95) /doability Mend
+						/if (${Me.PctHPs} < 95 || ${Melee.DiscID} || !${Me.CombatAbilityReady[Heel of Zagali Rk. III]} || !${Me.AbilityReady[Mend]}) /goto :healLoop
+					/stand
+					/target Shzalk
+					/delay 1s
+					/face
+					/squelch /moveto dist 190
+					/squelch /moveto id ${Target.ID}
+					/call ManualWaitTilThere
+					/face
+					/delay 4s
+					/alt act 797
+					:ShzalkPullWait
+						/if (${Target.Distance} > 30) /goto :ShzalkPullWait
+					/disc Heel of Zagali Rk. III
+					/squelch /attack on
+					/squelch /moveto dist 10
+					/varset moveBack TRUE
+				} else /if (${NearestSpawn[named radius 50 los].ID} && !${NearestSpawn[named radius 50 los].Dead}) {
+					/target ${NearestSpawn[named radius 50 los]}
+					/delay 5
+					/call Pull
+					/squelch /attack on
+					/varset moveBack TRUE
+				} else /if (${NearestSpawn[npc radius ${killRange} los].ID} && !${NearestSpawn[npc radius ${killRange} los].Dead}) {
+					/target ${NearestSpawn[npc radius ${killRange} los]}
+					/delay 5
+					/call Pull
+					/squelch /attack on
+					/varset moveBack TRUE
+				}
+			}
+		} else {
+			/if ((${Me.PctHPs} < 40 || ${Me.XTarget} > 3)) {
+				/if (${Me.CombatAbilityReady[Crane Stance Rk. II]}) /disc Crane Stance Rk. II
+				/if (${Me.CombatAbilityReady[Earthforce Discipline Rk. III]} && !${Melee.DiscID}) /disc Earthforce Discipline Rk. III
+			}
+			/if (${Me.AltAbilityReady[945]}) /alt act 945
+			/if (${Me.AltAbilityReady[1012]}) /alt act 1012
+			/if (${Me.AltAbilityReady[1235]}) /alt act 1235
+			/if (${Me.AltAbilityReady[1361]}) /alt act 1361
+			/if (${Me.AltAbilityReady[7001]}) /alt act 7001
+			/if (${Me.CombatAbilityReady[Tiger's Balance Rk. II]}) /disc Tiger's Balance Rk. II
+			/if (${Spell[Six Spirits Fist Technique].Stacks} && !${Me.Buff[Six Spirits Fist Technique].ID}) /casting "Apocryphal Soulforge Chestwraps"
+			/if (${Target.Dead} || ${Target.Type.Equal[Corpse]}) {
+				/squelch /target clear
+				/hidecorpses all
+			}
+			/if (!${Target.ID}) {
+				/if (${NearestSpawn[named radius 50].ID} && !${NearestSpawn[named radius 50].Dead}) {
+					/target ${NearestSpawn[named radius 50]}
+					/delay 5
+					/squelch /attack on
+					/varset moveBack TRUE
+				} else /if (${NearestSpawn[npc radius 50].ID} && !${NearestSpawn[npc radius 50].Dead}) {
+					/target ${NearestSpawn[npc radius 50]}
+					/delay 5
+					/squelch /attack on
+					/varset moveBack TRUE
+				}
+			}
+			/if (${Target.ID}) {
+				/if (!${Me.Combat}) /squelch /attack on
+				/if (!${Stick.Active}) /squelch /stick loose 10
+			}
+		}
+	/if (${NearestSpawn[npc radius ${killRange} los].ID} || ${moveBack} || ${Me.Moving} || ${MoveTo.Moving}) {
+		/delay 1s
+		/goto :killLoop
+	}
+/return
+
+Sub ManualWaitTilThere
+	/varset moveTimer 1m
+	:moveTimerWait
+		/if (${moveTimer.Value} <= 0) {
+			/echo Got stuck moving, aborting. ${Time.Time24}
+			/mqlog Got stuck moving, aborting. ${Time.Time24}
+			/moveto
+			/doability "Feign Death"
+			/end
+		}
+		/if (${MoveTo.Moving}) {
+			/delay 1s
+			/goto :moveTimerWait
+		}
+/return
+
+| To refresh all buffs, in between major areas
+Sub BuffAndInvis
+	/echo Buff and Invis ${RespawnTimer.Value}
+	/squelch /moveto pause
+	:InvisLoop
+		/if (${Me.CombatState.Equal[COMBAT]}) /return
+		/if (${Me.Invis}) /return
+		/if (${Me.Casting.ID}) {
+			/delay 1s
+			/goto :InvisLoop
+		}
+		/if (!${Me.Invis}) {
+			/delay 6s
+			/casting "Mask of Vanishing"
+			/goto :InvisLoop
+		}
+	/squelch /moveto unpause
+/return
+
+| To be used in between pulls
+Sub HasteCheck
+	/echo Haste + End Check ${RespawnTimer.Value}
+	/squelch /moveto pause
+	/if (!${Me.CombatState.Equal[COMBAT]} && ${Me.CombatAbilityReady[Rest Rk. III]} && (${Math.Calc[${Me.CurrentEndurance}/${Me.MaxEndurance}]} < 0.20) && ${Me.CurrentEndurance} > 50 && !${Melee.DiscID}) /disc Rest Rk. III
+	:HasteLoop
+		/if (${Me.CombatState.Equal[COMBAT]}) {
+			/squelch /moveto unpause
+			/return
+		}
+		/if (${Me.Casting.ID}) {
+			/delay 1s
+			/goto :HasteLoop
+		}
+		/if (${Me.Haste} < 170 && !${Me.CombatState.Equal[COMBAT]}) {
+			/casting "Lizardscale Plated Girdle"
+			/delay 4s
+			/goto :HasteLoop
+		}
+	/squelch /moveto unpause
+/return
+
+Sub Pull
+	/echo Pulling ${RespawnTimer.Value}
+	/alt act 376
+	:PullWaitMob
+		/if (${Target.Distance} > 30) {
+			/if (${Me.AltAbilityReady[376]}) {
+				/alt act 376
+				/delay 5
+			}
+			/if (${Target.Casting.ID} && ${Me.AltAbilityReady[797]}) {
+				/alt act 797
+				/delay 5
+			}
+			/if (${NearestSpawn[npc radius 30].ID} && !${NearestSpawn[npc radius 30].Dead}) {
+				/target ${NearestSpawn[npc radius 30]}
+				/delay 5
+				/squelch /attack on
+				/varset moveBack TRUE
+			}
+			/goto :PullWaitMob
+		}
+/return
+
+Sub PcCheck
+	/call PcCheckHelper
+	/if (${unexpectedPC}) {
+		/if (!${Me.Feigning}) {
+			/doability "Feign Death"
+		}
+		/echo Waiting for PC's to leave... ${Time.Time24}
+		/mqlog Waiting for PC's to leave... ${Time.Time24}
+		:PcCheckLoop
+			/call PcCheckHelper
+			/if (${unexpectedPC}) {
+				/delay 10s
+				/goto :PcCheckLoop
+			}
+		/if (!${Bool[${RespawnTimer.Value}]}) {
+			:idLoop
+				/delay 2s
+				/if (!${Me.AltAbilityReady[Imitate Death]}) /goto :idLoop
+			/alt act 420
+		}
+		/echo PC's gone... ${Time.Time24}
+		/mqlog PC's gone... ${Time.Time24}
+	}
+/return
+
+Sub PcCheckHelper
+	/varset unexpectedPC FALSE
+	/declare thisPlayerBad bool local
+	/if (${SpawnCount[pc]}>1) {
+		/for player 2 to ${SpawnCount[pc]}
+			/varset thisPlayerBad TRUE
+			/for approvedPlayer 0 to ApprovalCount
+				/if (${NearestSpawn[${player}, pc].Name.Equal[${ApprovedPCArray[${approvedPlayer}]}]}) {
+					/varset thisPlayerBad FALSE
+				}
+			/next approvedPlayer
+			/if (${thisPlayerBad}) {
+				/varset unexpectedPC TRUE
+			}
+		/next player
+	}
+/return
+
+Sub AAPicker
+	/declare a int local 1
+	/declare b int local 3
+	/declare AAFree int local 0
+	/declare AARank string local
+	/declare AAName string local
+	/declare AACost int local
+	/declare AAMinLevel int local
+	/declare ListName string local
+	/declare AATrainable string local
+	/if (!${Defined[AALastPick]}) /declare AALastPick string outer NULL
+
+	/varset AAFree ${Window[AAWindow].Child[CurrentCount].Text}
+	/if (${AALastPick.Equal[${Me.Level}:${AAFree}]} || ${AAFree} < 30) /return
+	
+	/if (${Window[AAWindow].Child[CanPurchaseFilter].Checked}) /nomodkey /notify AAWindow CanPurchaseFilter leftmouseup 
+	/delay 10
+	:Loop
+	/if (${Window[AAWindow].Child[List${b}].List[${a}].Length}) {
+		/varset AAName ${Window[AAWindow].Child[List${b}].List[${a}, 1]} 
+		/varset AARank ${Window[AAWindow].Child[List${b}].List[${a}, 2]} 
+		/varset AACost ${Window[AAWindow].Child[List${b}].List[${a}, 3]} 
+		
+		/if (${AARank.Arg[1,"/"]}>0 && ${AARank.Arg[1,"/"]}<${AARank.Arg[2,"/"]} && ${AACost}<=${AAFree}) {
+			|- We have a likely AA to purchase - lets see if we can. 
+			/nomodkey /notify AAWindow AAW_Subwindows tabselect ${b}
+			/nomodkey /notify AAWindow List${b} listselect ${a}
+			/delay 2
+			/varset AAMinLevel ${Window[AAWindow].FirstChild.Next.Text.Mid[${Math.Calc[${Window[AAWindow].FirstChild.Next.Text.Find[Level:]} + 7]},2]}		
+			/varset AATrainable	${Window[AAWindow].Child[TrainButton].Enabled}
+			/if ( ${AATrainable.Equal[TRUE]} ) {
+				|- Try to purchase it
+				/echo Purchasing ${AAName} : Cost ${AACost} lv at ${AARank} - req lv ${AAMinLevel} : ${RespawnTimer.Value}
+				/nomodkey /notify AAWindow TrainButton leftmouseup
+				/delay 5
+				/varset AAFree ${Window[AAWindow].Child[CurrentCount].Text}
+			}
+		}
+		/varcalc a ${a}+1
+		/goto :Loop
+	}
+	/if (${b}>1) {
+		/varcalc b ${b}-1
+		/varset a 1
+		/goto :Loop
+	}
+	/varset AALastPick ${Me.Level}:${AAFree}
+	/echo AAPickerLast ${AALastPick}
+	
+/return

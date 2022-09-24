@@ -1,0 +1,20 @@
+#warning
+
+#include Notify.inc
+
+| Severilous spawns on a x hour +/- 12 hour cycle: xh, xh
+
+sub main
+	/declare mobCount int outer 3
+	/call SetupNotifyVars
+	|/call setupAnchor
+	|/call setupLoot
+	
+	/call ArrayAdder "Severilous" TRUE
+	
+	/echo ---------Notify Severilous----------
+	
+	:notifyLoop
+		/call CheckTargets
+	/goto :notifyLoop
+/return

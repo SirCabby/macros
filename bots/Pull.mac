@@ -1,0 +1,631 @@
+#warning
+
+||--------------------------------------------------------------------------
+||
+||  Pull.mac -- really pull.inc
+||
+||--------------------------------------------------------------------------
+|| 
+||  Commands / Syntax
+||
+||   PullNow         int    	NOW			' start pulls
+||   PullNPCList   	 string 	NPC			' NPC race Spider
+||   PullNoNPCList   string 	NO			' NO Rungupp
+||   PullRange       string 	RANGE		' RANGE 150
+|| 	 PullCmdInit	 string		INITCMD     ' Any commands you want to run first?
+||   PullCmdMove     string 	MOVECMD		' How do I get from camp to pull spot?
+||   PullCmdStop     string 	STOPCMD		' How do I stop moving?
+||   PullCmdTag      string 	TAGCMD		' How do I tag a mob? 
+||   PullCmdSplit    string 	SPLITCMD	' How do I split mobs? 
+||   PullCmdHome     string 	HOMECMD		' How do I get from pull back to camp?
+||   PullCmdKill     string 	KILLCMD		' How do I tell group to join the kill?
+||   PullCmdLoot     string 	LOOTCMD     ' How do I loot bodies?
+||	 PullCmdRest	 string		RESTCMD     ' How do I tell group to rest up?
+||	 PullCmdReady	 string		READYCMD    ' How do I tell group we are ready to go?
+||   PullLeash       int        LEASH       ' <--- implement
+||   PullRepeat      int    	REPEAT		' How many times should we pull
+||   PullTimeOut     string 	ABORT		' Abort timer
+||   PullLowMana   	 int    	LowMANA		' LowMANA 30
+||   PullLowHP   	 int    	LowHP		' LowHP 30
+||   PullCheckPath   string 	CheckPATH	' CHECKPATH 1s
+||   PullCheckPathTM timer  				' internal var for when to check for mobs along a path
+||   PullNPCID       int    				' internal var for pull'ed ID
+||   PullState       int    				' internal var for where we are
+||   PullAbortTimer  timer  				' timer for when to abort 
+||   PullAbortIf     string     AbortIF  	' <--- implement
+||
+||   TODO : In PullWaitForMob -- Check to see if mob is in melee with any PC  
+|| 
+|| 
+||--------------------------------------------------------------------------
+
+||--------------------------------------------------------------------------
+||  PullDefineVars - Call to make sure everything is defined
+||--------------------------------------------------------------------------
+
+Sub PullDefineVars
+	/if (!${Defined[PullNPCList]}) {
+		/declare PullNow         int    outer
+		/declare PullNPCList   	 string outer 
+		/declare PullNoNPCList   string outer 
+		/declare PullRange       string outer
+		/declare PullSpawnFilter string outer
+		/declare PullCmdInit	 string outer
+		/declare PullCmdMove     string outer 
+		/declare PullCmdStop     string outer 
+		/declare PullCmdTag      string outer 
+		/declare PullCmdSplit    string outer 
+		/declare PullCmdHome	 string outer
+		/declare PullCmdKill	 string outer
+		/declare PullCmdLoot	 string outer
+		/declare PullCmdRest	 string outer
+		/declare PullCmdReady	 string outer
+		/declare PullRepeat      int    outer
+		/declare PullTimeOut     string outer
+		/declare PullLowMana     int    outer
+		/declare PullLowHP       int    outer
+		/declare PullCheckPath   string outer
+		/declare PullCheckPathTM timer  outer
+		/declare PullNPCID       int    outer
+		/declare PullState       int    outer
+		/declare PullAbortTimer  timer  outer
+		/declare PullKeyword     string outer | NOW | NPC | NO | RANGE | INITCMD | MOVECMD | STOPCMD | TAGCMD | SPLITCMD | HOMECMD | KILLCMD | LOOTCMD | RESTCMD | READYCMD | CLEAR | ABORT | LOWMANA | LOWHP | CHECKPATH | REPEAT | HELP |
+		/declare PullEchoStr	 string outer
+		/declare PullEchoTimer   timer  outer
+		/declare PullRestBreak	 timer  outer
+		/declare PullTooFarAheadDistance int outer 
+		/call PullClearVars
+	}
+/return
+
+||--------------------------------------------------------------------------
+||  PullSetArg - Given Cmd & Arg strings set varius flags
+||--------------------------------------------------------------------------
+
+Sub PullSetArg(string cmd, string arg)
+	/if (${cmd.Equal[NOW]}		) 	/varset PullNow		  1
+	/if (${cmd.Equal[NOW]}		) 	/varset PullState	  0
+	/if (${cmd.Equal[NPC]} 		)	/varset	PullNPCList   ${PullNPCList}|${arg}
+	/if (${cmd.Equal[NO]} 		)	/varset	PullNoNPCList ${PullNoNPCList}|${arg}
+	/if (${cmd.Equal[RANGE]}	)	/varset PullRange	  ${arg}
+	/if (${cmd.Equal[INITCMD]}	)	/varset PullCmdInit   ${arg}	
+	/if (${cmd.Equal[MOVECMD]}	)	/varset PullCmdMove   ${arg}
+	/if (${cmd.Equal[STOPCMD]}	)	/varset PullCmdStop   ${arg}
+	/if (${cmd.Equal[TAGCMD]}	)	/varset PullCmdTag    ${arg}
+	/if (${cmd.Equal[SPLITCMD]}	)	/varset PullCmdSplit  ${arg}
+	/if (${cmd.Equal[HOMECMD]}	)	/varset PullCmdHome   ${arg}
+	/if (${cmd.Equal[KILLCMD]}	)	/varset PullCmdKill   ${arg}
+	/if (${cmd.Equal[LOOTCMD]}	)	/varset PullCmdLoot   ${arg}
+	/if (${cmd.Equal[RESTCMD]}	)	/varset PullCmdRest   ${arg}	
+	/if (${cmd.Equal[READYCMD]}	)	/varset PullCmdReady  ${arg}		
+	/if (${cmd.Equal[REPEAT]}	)	/varset PullRepeat	  ${arg}
+	/if (${cmd.Equal[ABORT]}	) 	/varset PullTimeOut	  ${arg}
+	/if (${cmd.Equal[ABORT]}	) 	/varset PullAbortTimer ${arg}
+	/if (${cmd.Equal[LowMana]}	) 	/varset PullLowMana   ${arg}
+	/if (${cmd.Equal[LowHP]}	) 	/varset PullLowHP     ${arg}
+	/if (${cmd.Equal[CHECKPATH]}) 	/varset PullCheckPath ${arg}
+	/if (${cmd.Equal[CLEAR]}    ) 	/call   PullClearVars
+	/if (${cmd.Equal[HELP]}     ) 	/call   PullDebug	  9 
+/return
+
+||--------------------------------------------------------------------------
+||  PullClearVars - Clear the state variables
+||--------------------------------------------------------------------------
+
+Sub PullClearVars
+	/if (!${Defined[PullNPCList]}) /call PullDefineVars
+	/varset PullNPCList   	
+	/varset PullNoNPCList   
+	/varset PullRange      
+	/varset PullCmdInit
+	/varset PullCmdMove
+	/varset PullCmdStop
+	/varset PullCmdTag       
+	/varset PullCmdSplit
+	/varset PullCmdHome	    
+	/varset PullCmdKill			    
+	/varset PullCmdLoot
+	/varset PullCmdRest
+	/varset PullCmdReady
+	/varset PullTimeOut     2m
+	/varset PullNPCID       0
+	/varset PullRepeat      0
+	/varset PullLowMana	    0
+	/varset PullLowHP   	0
+	/varset PullCheckPath   1s
+	/varset PullCheckPathTM 0
+	/varset PullNow         0
+	/varset PullState       0
+	/varset PullAbortTimer  0
+	/varset PullTooFarAheadDistance 10
+/return
+
+||--------------------------------------------------------------------------
+||  PullDebug - Prints out state variables for debugging 
+||--------------------------------------------------------------------------
+
+Sub PullDebug(int cmd, string str)
+	/if ( ${cmd}==9 ) {
+		/echo --- Pull Vars ---
+		/echo Pull NPCList [ ${PullNPCList} NO [ ${PullNoNPCList} ] Range [ ${PullRange} ]
+		/echo Pull InitCmd [ ${PullCmdInit} ]
+		/echo Pull MoveCmd [ ${PullCmdMove} ]
+		/echo Pull StopCmd [ ${PullCmdStop} ]
+		/echo Pull TagCmd  [ ${PullCmdTag} ]		
+		/echo Pull SplitCmd[ ${PullCmdSplit} ]		
+		/echo Pull HomeCmd [ ${PullCmdHome} ]
+		/echo Pull KillCmd [ ${PullCmdKill} ]
+		/echo Pull LootCmd [ ${PullCmdLoot} ]
+		/echo Pull RestCmd [ ${PullCmdRest} ]
+		/echo Pull ReadyCmd[ ${PullCmdReady} ]
+		/echo PullLowHP = ${PullLowHP}     
+		/echo PullLowMana = ${PullLowMana}
+		/echo PullCheckPath = ${PullCheckPath}
+		/echo PullAbortTimer = ${PullAbortTimer}
+		/echo PullState = ${PullState}
+		/echo ------------------
+		/return
+	}
+	/if ( ${PullEchoStr.NotEqual[${str}]} ) /varset cmd 1
+	/if ( ${cmd}==1 || ${PullEchoTimer}==0 ) {
+		/varset PullEchoStr ${str}
+		/echo   PullAbortTimer = ${PullAbortTimer}  PullState = ${PullState}  Debug = ${PullEchoStr} ${Target}
+		/varset PullEchoTimer 6s
+	}
+/return
+	
+
+||--------------------------------------------------------------------------
+||  PullPulse - Call this from main loop to perform pulls 
+||--------------------------------------------------------------------------
+
+Sub PullPulse
+	/if ( ${PullNow}   == 0 )  	/return
+	/if ( ${PullState} == 0 )	/call PullStart
+	/if ( ${PullState} == 1 )	/call PullCheckCamp
+	/if ( ${PullState} == 2 )	/call PullCheckRestBreak
+	/if ( ${PullState} == 3 )	/call PullStartMoveOut
+	/if ( ${PullState} == 4 )	/call PullCheckForMob
+	/if ( ${PullState} == 5 )	/call PullStartMoveBack
+	/if ( ${PullState} == 6 )	/call PullWaitForMob
+	/if ( ${PullState} == 7 )	/call PullWaitForKill
+	/if ( ${PullState} == 9 )	/call PullCheckRestBreak
+	/if ( ${PullState} >= 10 )	/call PullWaitForMove
+	/if (${SpawnCount[pc radius 300 los nogroup]}) {
+		/return
+		/beep
+		/beep
+		/if (${AdvPath.Playing}) /play off
+		/varset PullNow 0
+		/return
+	}
+/return
+
+||--------------------------------------------------------------------------
+|| 	PullStart (State 0) - Start pull state by setting up timer --> (State 1) PullCheckChamp
+||--------------------------------------------------------------------------
+
+Sub PullStart
+	/call PullDebug 0 "PullStart(0)"
+	/target clear
+	/varset PullNPCID 0
+	/varset PullAbortTimer ${PullTimeOut}
+	/varset PullState 1
+	/call PullSetAlerts
+	/call PullDoCMD "${PullCmdInit}"
+/return
+
+||--------------------------------------------------------------------------
+|| 	PullCheckCamp (State 1) - Check to see if we already have agro in camp -> (State 2) PullCheckRestBreak OR TAG => (State 6) PullWaitForMob
+||--------------------------------------------------------------------------
+
+Sub PullCheckCamp
+    /declare G int
+	/declare ID int 0
+	/declare T int 0
+	/declare D int 0
+	/declare M int 0
+	
+	/if ( ${PullState}==1 ) {
+		/call PullDebug 0 "PullCheckCamp(1)"
+		/varset PullState 2
+		/varset PullRestBreak 5
+	}
+	
+    /for G 1 to 13
+		/if (${Me.XTarget[${G}].ID} && ${Me.XTarget[${G}].TargetType.Equal[Auto Hater]} && ${Me.XTarget[${G}].PctHPs} &&  ${Me.XTarget[${G}].Type.Equal[NPC]}) {
+			/varset ID ${Me.XTarget[${G}].ID}
+			/varcalc T ${Spawn[id ${ID}].Level}*10
+			/if (${Spawn[id ${ID}].Distance} < 50) /varcalc T ${T}+20
+			/if (${Spawn[id ${ID}].Moving}) /varcalc T ${T}+20
+			/if (${Spawn[id ${ID}].Named}) /varcalc T ${T}+40
+			
+			/if (${T} > ${M}) {
+				/varset  M ${T}
+				/varset  D ${ID}
+			}
+			/echo PULL: XTARGET[ ${G} ] T=${T} | ${Spawn[id ${ID}].Name} -> Lv:${Spawn[id ${ID}].Level} Mv:${Spawn[id ${ID}].Moving} 
+		}
+	/next G
+	
+	/if (${D}) {
+		/echo PULL: XTARGET[ ${D} ] T=${M} | ${Spawn[id ${D}].Name} 
+		/target id ${D}
+		/delay 1
+		/if ( ${Target.ID} && ${Target.Type.Equal[NPC]} ) {
+			/call PullDoCMD "${PullCmdTag}"
+			/varset PullNPCID ${Target.ID}
+			/varset PullState 6
+			/return
+		}
+	}
+
+/return
+
+
+||--------------------------------------------------------------------------
+||  PullCheckRestBreak (State 2/9)- Loop over the group checking their hp/mana.
+||--------------------------------------------------------------------------
+
+Sub PullCheckRestBreak
+	/call PullDebug 0 PullCheckRestBreak
+    /declare G int
+	/declare LowMana int 100
+	/declare LowHP int 100
+	/declare NeedRest int 0
+	/declare NotReady int 0
+
+	/declare Class string NULL
+	/declare Mana int 100
+	/declare HP int 0
+	/declare SpellName string NULL
+
+
+	/varset LowMana 100
+    /varset LowHP 100
+	
+	/call PullCheckCamp
+	/if (${PullRestBreak}) /return
+	
+    /for G 0 to ${Group}
+		/varset Class ${Group.Member[${G}].Spawn.Class.ShortName}
+		/varset Mana  ${Group.Member[${G}].Spawn.CurrentMana}
+		/varset HP 	  ${Group.Member[${G}].Spawn.PctHPs}
+		
+		/if (${G}==0) {
+			/varset Class ${Me.Class.ShortName}
+			/varset Mana  ${Me.PctMana}
+			/varset HP 	  ${Me.PctHPs}
+		}
+		|/echo Checking Group[${G}] -> ${Class} | ${Mana} | ${HP}
+		/if (${Class.Equal[CLR]} || ${Class.Equal[DRU]} || ${Class.Equal[SHM]} || ${Class.Equal[SxHD]}  ) {
+			/if (${Mana} > 0 && ${Mana} < ${LowMana} && ${HP}>= 1 )  /varset LowMana ${Mana}
+		}
+
+		/if (${HP} < ${LowHP} )  /varset LowHP ${HP}
+
+		/if (${Class.NotEqual[BRD]}) /varset SpellName ${NetBots[${Group.Member[${G}]}].Casting}
+		/if (${SpellName.NotEqual[NULL]}) {
+			/echo PullRestCheck - Member casting - returning
+			/varset PullRestBreak 6s
+			/return
+		}
+    /next G
+	
+	/if ( ${LowMana} == 0 ) /varset LowMana 100
+	
+	/if ( ${LowMana} < ${PullLowMana} ) /varset NeedRest 1
+	/if ( ${LowHP} < ${PullLowHP} ) /varset NeedRest 1
+	/echo LowestMANA = ${LowMana}   LowestHP = ${LowHP}    NeedRest ${NeedRest}  Threshold HP = ${PullLowHP} Mana = ${PullLowMana}
+
+	/if (${PullState}==2) {
+		/varset PullState 3
+		/if ( ${NeedRest} ) {
+			/call PullDoCMD "${PullCmdRest}"
+			/varset PullState 9
+		}
+	}
+	/if ( ${PullState} == 9 && ${LowHP}>95 && ${LowMana}>95 ) {
+		/call PullDoCMD "${PullCmdReady}"
+		/varset PullRestBreak 12s
+		/varset PullState 2
+	}
+	
+/return
+
+		
+||--------------------------------------------------------------------------
+|| 	PullStartMoveOut (State 3) - Start moving directly to a loc or path
+||--------------------------------------------------------------------------
+
+Sub PullStartMoveOut
+	/varset PullState 14
+	/call PullCheckForMob
+	/if (${PullState}==14) {
+		/call PullDebug 0 PullStartMoveOut
+		/call PullDoCMD "${PullCmdMove}"
+	}
+/return
+
+||--------------------------------------------------------------------------
+||  PullCheckForMob (State 4) - Find a mob that meets the filters
+||--------------------------------------------------------------------------
+
+Sub PullCheckForMob
+	/call PullDebug 0 PullCheckForMob
+	/declare a int
+	/declare ID int
+	
+	/if (${Window[ExtendedTargetWnd].Child[ETW_HPLabel0].Open} && ${Window[ExtendedTargetWnd].Child[ETW_HPLabel0].Text.NotEqual[0]}) {
+		/notify ExtendedTargetWnd ETW_Gauge0 leftmouseup
+		/delay 1
+		/if ( ${Target.ID} && ${Spawn[${Target.ID}].Type.Equal[NPC]} ) {
+			/call PullDoCMD "${PullCmdStop}"
+			/call PullDoCMD "${PullCmdTag}"
+			/varset PullState 5
+			/return
+		}
+	}
+
+	/for a 1 to 10
+		/varset ID ${Me.NearestSpawn[${a},${PullSpawnFilter}].ID}
+		|/if ( ${ID} ) /echo Checking ID ${ID} LOS = ${Spawn[id ${ID}].LineOfSight}
+		/if ( ${ID} && ${Spawn[id ${ID}].LineOfSight}) {
+			/call PullDoCMD "${PullCmdStop}"
+			/target id ${ID}
+			/delay 1s !${Target.ID}
+			/squelch /face fast nolook
+			/delay 1
+			|/echo Target = ${Target.Name} --> LOS = ${Target.LineOfSight}
+			/call PullDoSplitPull
+			/delay 3
+			/echo ==> Should be setting state to combat
+			/if (${Me.CombatState.Equal[COMBAT]}) /varset		PullState 5
+			/return
+		}
+	/if ( ${PullAbortTimer}==0 ) /varset PullState 5
+/return
+
+||--------------------------------------------------------------------------
+|| 	PullStartMoveBack (State 5) - Start moving back from pull spot
+||--------------------------------------------------------------------------
+
+Sub PullStartMoveBack
+	/call PullDebug 0 PullStartMoveBack
+	/call PullDoCMD "${PullCmdHome}"
+	/varset PullState 16
+/return
+
+
+||--------------------------------------------------------------------------
+||  PullWaitForMob (State 6) - We are back in camp with a mob inc (hopefully)
+||--------------------------------------------------------------------------
+
+Sub PullWaitForMob
+	/call PullDebug 0 PullWaitForMob
+|	/echo Waiting for Mob to get home Target = ${Target}  Timer = ${PullAbortTimer}
+	|-- Check to see if we lost mob.
+
+	/if (!${Me.CombatState.Equal[COMBAT]}) /varset		PullState 4
+	/if ( ${PullAbortTimer} == 0 ) /varset PullState 7
+	/if ( !${Target.ID} ) /varset PullState 7
+	/if ( ${Target.ID} && ${Target.Distance}>50 && ${Spawn[${Target.ID}].Type.Equal[NPC]}) /call PullDoCMD "${PullCmdTag}"
+	/if ( ${Target.ID} && ${Target.Distance}<50 && ${Spawn[${Target.ID}].Type.Equal[NPC]}) {
+		|/echo Home with mob - doing PullCMDKill = "${PullCMDKill}"
+		/call PullDoCMD "${PullCmdKill}"
+		/echo PullCmdKill done : CombatState = ${Me.CombatState}
+		/varset PullState 7
+		/varset PullNPCID ${Target.ID}
+	}
+/return
+
+||--------------------------------------------------------------------------
+||  PullWaitForKill (State 7) - Wait for it to get killed
+||--------------------------------------------------------------------------
+
+Sub PullWaitForKill
+	/call PullDebug 0 PullWaitForKill
+	/if ( ${PullAbortTimer}==0 ) /varset PullNPCID 0
+	|- If we pulled is it alive yet and in range?
+	/if ( ${Melee.Combat} ) /return
+	/if ( ${PullNPCID} && ${Spawn[id ${PullNPCID}].Type.NotEqual[CORPSE]} && ${Spawn[id ${PullNPCID}].Distance} < 150 ) {
+		/return
+	}
+	/if ( ${PullNPCID} && ${Spawn[id ${PullNPCID}].Type.NotEqual[CORPSE]} && ${Spawn[id ${PullNPCID}].Distance} < 150 ) /return
+	/if ( ${PullRepeat}>0 ) /varcalc PullRepeat ${PullRepeat} - 1 
+	/if ( ${PullNPCID}==0 ) /varset PullNow   0
+	/if ( ${PullRepeat}==0 ) /varset PullNow 0
+	/varset PullNPCID 0
+	/varset PullState 0
+	/echo PULL WAIT FOR KILL -- DONE : DO LOOT CMD [${PullCmdLoot}]
+	/call PullDoCMD "${PullCmdLoot}"
+/return
+
+
+Sub PullTooFarAhead
+    /declare G int
+    /for G 1 to 5
+		/if ( ${Group.Member[${G}].Distance} > ${PullTooFarAheadDistance} ) {
+			/echo /play pause 1s -- LEASH
+			/play pause 1000
+		}
+	/next G
+/return
+
+||--------------------------------------------------------------------------
+|| 	PullWaitForMove (State 14/16) - If move was using path check to see if we are there
+||--------------------------------------------------------------------------
+	
+Sub PullWaitForMove
+	/call PullDebug 0 PullWaitForMove
+	/if ( ${PullCheckPathTM}==0 && ${PullState}==14 ) {
+		/call PullCheckForMob
+		/call PullCheckCamp
+		/varset PullCheckPathTM ${PullCheckPath}
+	}
+	/if ( ${AdvPath.Playing} && !${AdvPath.Paused} ) /return
+	/if ( ${PullState} > 10 ) /varcalc PullState ${PullState}-10
+/return
+
+
+
+||--------------------------------------------------------------------------
+||  PullSetAlerts - Set Alerts used 
+||--------------------------------------------------------------------------
+
+Sub PullSetAlerts
+	/declare s string
+	/declare a int 0
+	/squelch /alert clear 1
+	/if ( ${PullRange.Equal[NULL]} ) /varset PullRange 100
+	|| -- Parse loop - 
+	:PullCheckNext
+		/varcalc a ${a}+1
+		/varset s ${PullNoNPCList.Arg[${a},|]}
+		/if ( ${s.NotEqual[NULL]} ) {
+			/squelch /alert add 1 npc ${s}
+			/echo /squelch /alert add 1 npc ${s}
+			/goto :PullCheckNext
+		} 
+	|| -- End Pull Parse Loop		
+	/varset a 0
+	/squelch /alert clear 2
+	:PullCheckNext2
+		/varcalc a ${a}+1
+		/varset s ${PullNPCList.Arg[${a},|]}
+		/if ( ${s.NotEqual[NULL]} ) {
+			/squelch /alert add 2 npc ${s} radius ${PullRange}
+			/echo /squelch /alert add 2 npc ${s} radius ${PullRange}
+			/goto :PullCheckNext2
+		} 
+	|| -- End Pull Parse Loop		
+	/if (${PullNPCList.Length} == 0) /squelch /alert add 2 npc radius ${PullRange}
+
+	/varset PullSpawnFilter alert 2
+	/if ( ${PullNoNPCList.Length} > 1 && ${PullNoNPCList.NotEqual[NULL]} ) /varset PullSpawnFilter noalert 1 alert 2
+
+	/varset a 0
+	/squelch /alert clear 3
+	:PullCheckNext3
+		/varcalc a ${a}+1
+		/varset s ${Group.Member[${a}].Name}
+		/if ( ${s.NotEqual[NULL]} ) {
+			/squelch /alert add 3 ${Group.Member[${a}].Type} ${s} radius 100
+			/goto :PullCheckNext3
+		} 
+	|| -- End Pull Parse Loop		
+	
+/return
+
+
+
+||--------------------------------------------------------------------------
+||  PullParse - Take free form input and parse it into commands 
+||--------------------------------------------------------------------------
+
+Sub PullParse(string line)
+	/declare cmd string NULL
+	/declare arg string NULL
+	/declare s   string
+	/declare a   int     0
+
+	|| -- Parse loop - 
+	:PullParseNext
+		/varcalc a ${a}+1
+		/varset s ${line.Arg[${a}," "]}
+
+		/if ( ${PullKeyword.Find[| ${s} |]} || ${s.Equal[NULL]} ) {
+			| -- Found key word or - process old key word + arg 
+			/call PullSetArg "${cmd}" "${arg}"
+			/varset cmd ${s}
+			/varset arg 
+		} else {
+			/varset arg ${arg} ${s}
+		}
+	/if (${s.NotEqual[NULL]}) /goto :PullParseNext
+	|| -- End Pull Parse Loop		
+/return
+
+||--------------------------------------------------------------------------
+||  PullDoCMD - Do one of the three commands based on first token.
+||--------------------------------------------------------------------------
+
+Sub PullDoCMD(string line)
+	/declare s   string
+	/declare a   int     0
+
+	|| -- Parse loop - 
+	:PullDoCMDNext
+		/varcalc a ${a}+1
+		/varset  s ${line.Arg[${a},|]}
+		/if ( ${s.Equal[NULL]} ) /return
+		/echo PullDoCmd : [${s}]
+		
+		/if ( ${s.Left[1].Equal[/]} ) {
+			/docommand ${s}
+		} else {
+			/call ProcessRequest "${Me}" "${s}"
+		}
+		/goto :PullDoCMDNext
+	|| -- End Loop		
+/return
+
+
+||--------------------------------------------------------------------------
+||  PullDoSplitPull - Split / Tag a mob (pack)
+||--------------------------------------------------------------------------
+
+Sub PullDoSplitPull
+	/declare MobCnt int 0
+	/varset MobCnt ${SpawnCount[npc radius 50 loc ${Target.X} ${Target.Y}]}
+	/echo PullDoSplitPull -- checking cnt ${MobCnt}
+	/call PullDoCMD "${PullCmdStop}"
+	/if ( ${MobCnt} > 1 ) {
+		|/call PullDoMarkTargets
+		/call PullDoCMD "${PullCmdSplit}"
+		/delay 5
+		/delay 2s ${Me.XTarget}
+		/delay 5
+		/declare a int
+		/declare ID int
+	
+		/for a 1 to ${Me.XTarget}
+			/varset ID ${Me.XTarget[${a}].ID}
+			/echo Mezed - is ID ${ID} moving? ${Spawn[id ${ID}].Moving} 
+			/if ( !${Target.Moving} && ${Spawn[id ${ID}].Moving} ) {
+				/echo it is moving - going to target it 
+				/target id ${ID}
+				/delay 1s !${Target.ID}
+				/varset a 99
+			}
+		/next a
+	}
+	|/if (!${Target.Mark} || ${Target.Mark}!=1)	/marknpc 1
+	/call PullDoCMD "${PullCmdTag}"
+	/call PullCheckCamp
+/return
+
+
+||--------------------------------------------------------------------------
+||  PullDoMarkTargets - Marks a mob (pack) 
+||--------------------------------------------------------------------------
+Sub PullDoMarkTargets
+	/declare id1 int ${Me.NearestSpawn[1,noalert 1 radius 50 loc ${Target.X} ${Target.Y}].ID}
+	/declare id2 int ${Me.NearestSpawn[2,noalert 1 radius 50 loc ${Target.X} ${Target.Y}].ID}
+	/declare id3 int ${Me.NearestSpawn[3,noalert 1 radius 50 loc ${Target.X} ${Target.Y}].ID}
+	/if (${id3}) {
+		/target id ${id3}
+		/delay 1s ${Target.ID}!=${id3}
+		/if (!${Target.Mark} || ${Target.Mark}!=3)	/marknpc 3
+	}
+	/if (${id2}) {
+		/target id ${id2}
+		/delay 1s ${Target.ID}!=${id3}
+		/if (!${Target.Mark} || ${Target.Mark}!=2)	/marknpc 2
+	}
+
+	/target id ${id1}
+	/delay 1s ${Target.ID}!=${id1}
+	/if (!${Target.Mark} || ${Target.Mark}!=1)	/marknpc 1
+	/delay 2
+/return

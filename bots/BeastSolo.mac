@@ -1,0 +1,326 @@
+#warning
+
+#include SoloEngine.inc
+
+#define ZoneInstance "Beasts' Domain"
+#define ZoneStatic "Argath, Bastion of Illdaera"
+#define QuestGiver "Captain Portencia"
+#define RequestPhrase "get"
+#define EnterPhrase "ready"
+
+Sub main
+	/echo Beast Solo
+	
+	/call SetupSoloVars
+	
+	| Set Path Arrays
+	/call SetArrays
+	|/call SetFragArrays
+	
+	:InstanceLoop
+		| Argath logic
+		/call GetInstance "QuestGiver" "RequestPhrase" "EnterPhrase" "ZoneInstance"
+		
+		| Beast logic
+		/call RunNavs
+		
+		| Exit logic
+		/call RemoveInstance "ZoneStatic"
+	/goto :InstanceLoop
+/return
+
+Sub SetArrays
+	|1 - must supply kill range on starting nav point
+	/call ArrayAdder 307 2755 0
+	|2
+	/call ArrayAdder 186 2582
+	|3
+	/call ArrayAdder 46 2350
+	|4
+	/call ArrayAdder 215 2393
+	|5
+	/call ArrayAdder 144 2277 40
+	|6
+	/call ArrayAdder 449 2182 120
+	|7 - Cross top of left river
+	/call ArrayAdder 51 1921
+	|8
+	/call ArrayAdder -348 1522 150
+	|9
+	/call ArrayAdder -273 1154
+	|10 - Cross top of right river
+	/call ArrayAdder 2 1284
+	|11
+	/call ArrayAdder 21 1434
+	|12
+	/call ArrayAdder 254 1579
+	|13
+	/call ArrayAdder 209 1474 200
+	|14
+	/call ArrayAdder 272 1299
+	|15
+	/call ArrayAdder 283 974
+	|16
+	/call ArrayAdder 210 855
+	|17
+	/call ArrayAdder 460 273
+	|18
+	/call ArrayAdder 478 99
+	|19
+	/call ArrayAdder 734 138
+	|20
+	/call ArrayAdder 812 68
+	|21
+	/call ArrayAdder 503 -232
+	|22
+	/call ArrayAdder 163 -180
+	|23
+	/call ArrayAdder -205 162
+	|24
+	/call ArrayAdder -110 207
+	|25
+	/call ArrayAdder -205 162
+	|26
+	/call ArrayAdder -173 -34
+	|27
+	/call ArrayAdder -449 -276
+	|28
+	/call ArrayAdder -733 -86
+	|29
+	/call ArrayAdder -694 322
+	|30
+	/call ArrayAdder -487 472
+	|31 - Cross bottom of right river
+	/call ArrayAdder -615 861
+	|32
+	/call ArrayAdder -884 944
+	|33
+	/call ArrayAdder -985 1122
+	|34
+	/call ArrayAdder -1251 953
+	|35
+	/call ArrayAdder -1317 1311
+	|36
+	/call ArrayAdder -1154 1480
+	|37 - Cross bottom of middle river
+	/call ArrayAdder -1160 1653
+	|38 - Cross bottom of left river
+	/call ArrayAdder -963 1882
+	|39
+	/call ArrayAdder -464 2095
+	|40
+	/call ArrayAdder -540 2357
+	|41
+	/call ArrayAdder -520 2623
+	|42
+	/call ArrayAdder -313 2599
+	|43
+	/call ArrayAdder -1003 2730
+	|44
+	/call ArrayAdder -937 2365
+	|45
+	/call ArrayAdder -1291 2049
+	|46
+	/call ArrayAdder -1288 1741
+	|47 - Across left river to Section 2
+	/call ArrayAdder -1556 1635
+	|48 - Back across left river into Section 2
+	/call ArrayAdder -1886 1768
+	|49
+	/call ArrayAdder -2014 2234
+	|50
+	/call ArrayAdder -2077 2275
+	|51
+	/call ArrayAdder -2073 2679
+	|52
+	/call ArrayAdder -2295 2658
+	|53
+	/call ArrayAdder -2073 2679
+	|54
+	/call ArrayAdder -2077 2275
+	|55
+	/call ArrayAdder -2014 2234
+	|56
+	/call ArrayAdder -2022 2064
+	|57
+	/call ArrayAdder -2205 1866
+	|58 - Cross top of left river
+	/call ArrayAdder -2158 1550
+	|59
+	/call ArrayAdder -1997 1279
+	|60
+	/call ArrayAdder -2063 864
+	|61
+	/call ArrayAdder -2083 573
+	|62
+	/call ArrayAdder -2196 571
+	|63
+	/call ArrayAdder -2271 313
+	|64
+	/call ArrayAdder -2490 205
+	|65
+	/call ArrayAdder -2161 201
+	|66 - Cross top of middle river
+	/call ArrayAdder -1950 134
+	|67
+	/call ArrayAdder -1833 21
+	|68
+	/call ArrayAdder -1528 13
+	|69 - Cross top of right river first time to get add
+	/call ArrayAdder -1567 -262
+	|70 - Cross top of right river second time to return
+	/call ArrayAdder -1528 13
+	|71
+	/call ArrayAdder -1372 363
+	|72
+	/call ArrayAdder -1164 152
+	|73 - Cross top of right river third time to enter tunnel
+	/call ArrayAdder -1229 -74
+	|74
+	/call ArrayAdder -1229 -275
+	|75 - Enter tunnel
+	/call ArrayAdder -1260 -682
+	|76
+	/call ArrayAdder -1425 -809
+	|77
+	/call ArrayAdder -1448 -1149
+	|78
+	/call ArrayAdder -1687 -1204
+	|79
+	/call ArrayAdder -1692 -1241
+	|80
+	/call ArrayAdder -1687 -1204
+	|81
+	/call ArrayAdder -1843 -1048
+	|82
+	/call ArrayAdder -1763 -894
+	|83
+	/call ArrayAdder -1613 -829
+	|84
+	/call ArrayAdder -1742 -511
+	|85
+	/call ArrayAdder -2076 -784
+	|86
+	/call ArrayAdder -1997 -1102
+	|87 - Exit tunnel
+	/call ArrayAdder -2179 -1357
+	|88 - Cross bottom of right river
+	/call ArrayAdder -2348 -851
+	|89
+	/call ArrayAdder -2212 -629
+	|90
+	/call ArrayAdder -2601 -464
+	|91
+	/call ArrayAdder -3085 -567
+	|92
+	/call ArrayAdder -3435 -427
+	|93 - Cross bottom of middle river
+	/call ArrayAdder -3386 -324
+	|94
+	/call ArrayAdder -3343 66
+	|95
+	/call ArrayAdder -3110 490
+	|96
+	/call ArrayAdder -3637 1188
+	|97 - Cross bottom of left river first time
+	/call ArrayAdder -3181 1731
+	|98
+	/call ArrayAdder -3112 1731
+	|99
+	/call ArrayAdder -3270 1704
+	|100 - Cross back across bottom of left river
+	/call ArrayAdder -3589 1348
+	|101
+	/call ArrayAdder -3942 1194
+	|102 - Enter Section 3, cross river
+	/call ArrayAdder -4577 1048
+	|103 - Cross top of left river
+	/call ArrayAdder -4458 352
+	|104
+	/call ArrayAdder -4290 -377
+	|105 - Cross right river before fork
+	/call ArrayAdder -4130 -642
+	|106
+	/call ArrayAdder -4018 -994
+	|107
+	/call ArrayAdder -4151 -1226
+	|108
+	/call ArrayAdder -4298 -1244
+	|109
+	/call ArrayAdder -4350 -1151
+	|110
+	/call ArrayAdder -5198 -1296
+	|111 - Cross right bottom river
+	/call ArrayAdder -5457 -1288
+	|112
+	/call ArrayAdder -5369 -977
+	|113 - Cross second right bottom river
+	/call ArrayAdder -6121 -1248
+	|114 - Cross third right bottom river
+	/call ArrayAdder -5930 -845
+	|115
+	/call ArrayAdder -5552 -598
+	|116
+	/call ArrayAdder -5861 -338
+	|117
+	/call ArrayAdder -5721 -204
+	|118 - Cross second left river
+	/call ArrayAdder -5935 -8
+	|119
+	/call ArrayAdder -5706 -46
+	|120 - Cross second left river
+	/call ArrayAdder -5935 -8
+	|121
+	/call ArrayAdder -6465 234
+	|122 - Cross first left river
+	/call ArrayAdder -5889 323
+	|123
+	/call ArrayAdder -5123 790
+	|124
+	/call ArrayAdder -5106 1038
+/return
+
+Sub SetFragArrays
+	|1 - must supply kill range on starting nav point
+	/call ArrayAdder 307 2755 0
+	|2
+	/call ArrayAdder 186 2582
+	|3
+	/call ArrayAdder 46 2350
+	|4 - Cross top of left river
+	/call ArrayAdder 51 1921
+	|5
+	/call ArrayAdder -348 1522 100
+	|6
+	/call ArrayAdder -273 1154
+	|7
+	/call ArrayAdder -685 727
+	|8 - Cross bottom of right river
+	/call ArrayAdder -920 290
+	|9 - Cross bottom of right river into Section 2
+	/call ArrayAdder -1096 251
+	|10 - Cross top of right river to enter tunnel
+	/call ArrayAdder -1243 -69
+	|11
+	/call ArrayAdder -1229 -275 200
+	|12 - Enter tunnel
+	/call ArrayAdder -1260 -682
+	|13
+	/call ArrayAdder -1425 -809
+	|14
+	/call ArrayAdder -1448 -1149
+	|15
+	/call ArrayAdder -1687 -1204
+	|16
+	/call ArrayAdder -1692 -1241
+	|17
+	/call ArrayAdder -1687 -1204
+	|18
+	/call ArrayAdder -1843 -1048
+	|19
+	/call ArrayAdder -1763 -894
+	|20
+	/call ArrayAdder -1613 -829
+	|21 - End Alarans
+	/call ArrayAdder -1742 -511
+/return

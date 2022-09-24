@@ -1,0 +1,99 @@
+#warning
+#turbo
+
+||-----------------------------------------------------
+|| Macro: plm.mac - a hit all mobs with melee attacks. 
+||
+|| Author: Dewey2461 
+|| Revised by: JudgeD
+||
+|| Usage: Pull a swarm and while they are busy hitting your tank
+|| run this macro which will make a list of all the npc's close 
+|| and attack each of them in turn. 
+||
+|| When it detects a hit it will move to the next mob. 
+|| 
+||-----------------------------------------------------
+
+#define AggroRadius 35
+
+#Event Hit   "#*#You slash #*#"
+#Event Hit   "#*#You pierce #*#"
+#Event Hit   "#*#You hits #*#"
+#Event Hit   "#*#You crush #*#"
+#Event Hit   "#*#You hit #*#"
+#Event Hit   "#*#You bite #*#"
+
+
+Sub Main
+	/declare MobCount int outer
+	/declare MobID[150] int outer
+	/declare ID int outer
+	/declare MobIndex int outer 1
+	/declare MobHit bool outer FALSE
+
+	:Restart
+
+	/echo Starting PLM, getting list of mobs
+
+	| Fill list of mobs
+	/varset MobCount 0
+	:LoopGetNPC
+		/varset ID ${Me.NearestSpawn[${Math.Calc[${MobCount} + 1]}, npc].ID}
+		/if (${Spawn[${ID}].Distance} < AggroRadius) {
+			/varcalc MobCount ${MobCount} + 1
+			/varset MobID[${MobCount}] ${ID}
+			/goto :LoopGetNPC
+		}
+
+	| No mobs?
+	/if (${MobCount} == 0) {
+		/echo No mobs in range
+		/return
+	}
+	
+	/echo ${MobCount} mobs in range
+
+	:LoopKillNPC
+		/doevents
+		
+		/if (${MobHit}) {
+			/varcalc MobIndex ${MobIndex} + 1
+			/varset MobHit FALSE
+		}
+		
+		/if (${Target.ID} != ${MobID[${MobIndex}]}) {
+			/if (${MobIndex} > ${MobCount}) {
+				/bct ic DSKILL
+				/squelch /target clear
+				/end
+			}
+			
+			/echo Targeting ID ${MobID[${MobIndex}]} -- ${MobIndex} of ${MobCount}
+			/call SafeTarget ${MobID[${MobIndex}]}
+		}
+		
+		/if (${Target.Dead} || ${Target.Type.Equal[Corpse]}) {
+			/squelch /target clear
+			/call Event_Hit
+			/echo Mob died, skipping ID ${MobID[${MobIndex}]}
+			/goto :LoopKillNPC
+		}
+		
+		/if (${Target.ID}) {
+			/if (!${Stick.Active}) /squelch /stick behindonce 10
+			/if (!${Me.Combat}) /squelch /attack on
+		}
+		
+		/delay 5
+	/goto :LoopKillNPC
+/return   
+
+Sub SafeTarget(int targetId)
+	/squelch /target id ${targetId}
+	/delay 2s ${Target.ID} == ${targetId}
+/return
+
+sub Event_Hit
+	/varset MobHit TRUE
+/return

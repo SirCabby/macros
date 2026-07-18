@@ -1,3 +1,15 @@
 e3/*
 mcs_*.ini
 mcs.ini
+
+# Stock macros shipped with MacroQuest (this repo lives inside the MQ release macros folder)
+/ArrayTest.mac
+/Arrows.mac
+/Cams.mac
+/DoorTests.mac
+/EventTest.mac
+/Fish.mac
+/Follow.mac
+/Inventory.mac
+/ShowBonuses.mac
+/uservarstest.mac
